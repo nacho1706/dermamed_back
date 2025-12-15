@@ -6,7 +6,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 - **Framework**: Laravel 12 (PHP 8.2+)
 - **Database**: SQLite (default), supports PostgreSQL
-- **API Authentication**: Laravel Sanctum (token-based and SPA authentication)
+- **API Authentication**: JWT (tymon/jwt-auth) - stateless token-based authentication
 - **Queue Driver**: Database-backed queues
 - **Session Storage**: Database-backed sessions
 - **Development Environment**: Docker
@@ -134,16 +134,17 @@ A Dockerfile is provided with PHP 8.4-Apache, includes:
 - Service providers are loaded via `app/Providers/AppServiceProvider.php`
 
 ### Authentication & API
-- **Sanctum**: Used for API token authentication
-- Default API route (`/user`) requires `auth:sanctum` middleware
-- Stateful domains configured for SPA authentication (localhost, localhost:3000, 127.0.0.1)
-- Personal access tokens table for API token management
-- Token expiration and prefix configurable via `config/sanctum.php`
+- **JWT (tymon/jwt-auth)**: Used for stateless API token authentication
+- Tokens are self-contained and don't require database lookups for validation
+- User model implements `JWTSubject` interface with `getJWTIdentifier()` and `getJWTCustomClaims()` methods
+- Authentication uses `JWTAuth::attempt()` for login and `JWTAuth::fromUser()` for registration
+- Token refresh available via `JWTAuth::refresh()`
+- Token invalidation (logout) via `JWTAuth::invalidate()`
+- Token expiration and other settings configurable via `config/jwt.php`
 
 ### Database Schema
 Key tables:
-- `users`: Standard Laravel user authentication (name, email, password)
-- `personal_access_tokens`: Sanctum API tokens (polymorphic tokenable relationship)
+- `users`: Standard Laravel user authentication (name, email, password, email_verified_at, remember_token)
 - `sessions`: Database-backed session storage
 - `password_reset_tokens`: Password reset functionality
 - `cache`, `cache_locks`: Database-backed cache
@@ -151,7 +152,9 @@ Key tables:
 
 ### Directory Structure
 - `app/Http/Controllers/`: HTTP request handlers (extends base `Controller`)
+- `app/Http/Requests/`: Form Request classes for validation
 - `app/Models/`: Eloquent models (uses `HasFactory` trait)
+- `app/Factories/`: Domain factories for creating/updating models from requests
 - `routes/api.php`: API routes (prefix: `/api`)
 - `routes/web.php`: Web routes
 - `routes/console.php`: Artisan commands
@@ -165,7 +168,7 @@ Key tables:
 All configuration files are in `config/`:
 - `auth.php`: Authentication guards and providers
 - `database.php`: Database connections (SQLite default)
-- `sanctum.php`: API authentication settings
+- `jwt.php`: JWT authentication settings (token TTL, refresh TTL, algorithm, etc.)
 - `queue.php`: Queue connections and drivers
 - `cache.php`: Cache stores (database default)
 
@@ -179,11 +182,187 @@ Environment variables are defined in `.env` (copy from `.env.example`).
 - Define `$fillable` or `$guarded` for mass assignment protection
 - Use `casts()` method for attribute casting (Laravel 12 pattern, not property)
 
+### Request Validation Pattern
+- **All request validation must use dedicated Form Request classes in `app/Http/Requests/`**
+- Form Requests encapsulate validation rules separate from controller logic
+- **Form Requests must be organized in folders by controller**: Each controller should have its own folder containing all its Form Requests
+  - Example: `app/Http/Requests/Cheque/StoreChequeRequest.php`, `app/Http/Requests/Cheque/UpdateChequeRequest.php`
+  - Example: `app/Http/Requests/User/StoreUserRequest.php`, `app/Http/Requests/User/UpdateUserRequest.php`
+- Request naming convention: `{Action}{ModelName}Request` (e.g., `StoreChequeRequest`, `UpdateChequeRequest`)
+- Controllers must type-hint the Form Request class in method signatures
+- Use `$validated = $request->validated()` at the beginning of controller methods
+- Access validated data using `$validated['field_name']` instead of `$request->field_name`
+
+**Form Request Example:**
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreChequeRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true; // Or implement authorization logic
+    }
+
+    public function rules(): array
+    {
+        return [
+            'titulo' => 'string|nullable',
+            'numero' => 'numeric|nullable',
+            'id_entidad_bancaria' => 'numeric|nullable',
+            'fecha_cobro' => 'date|required',
+            'id_persona_tomador' => 'required|exists:personas,id',
+            'id_persona_librador' => 'required|exists:personas,id',
+            'monto_nominal' => 'required|numeric',
+            'cantidad_dias_clearing_bancario' => 'nullable|numeric',
+            'fecha_operativa' => 'nullable|date',
+            'forma_pago' => 'nullable|in:efectivo,transferencia,cheque',
+        ];
+    }
+}
+```
+
+**Controller Usage:**
+```php
+public function store(StoreChequeRequest $request)
+{
+    $validated = $request->validated();
+    
+    $cheque = ChequeFactory::fromRequest($validated);
+    $cheque->save();
+    
+    return response()->json(['success' => true, 'cheque' => $cheque], 201);
+}
+
+public function update(UpdateChequeRequest $request, $id)
+{
+    $validated = $request->validated();
+    
+    $cheque = Cheque::findOrFail($id);
+    $cheque = ChequeFactory::fromRequest($validated, $cheque);
+    $cheque->save();
+    
+    return response()->json(['success' => true, 'cheque' => $cheque]);
+}
+```
+
+### Index Method Pagination Pattern
+- **All `index()` methods must use Form Requests with pagination parameters**
+- Index requests must accept `cantidad` (items per page) and `pagina` (page number) as optional parameters
+- Both parameters should be validated as `sometimes|integer|min:1`
+- Default values: `cantidad` = 10, `pagina` = 1
+- Use Laravel's `paginate()` method for database queries
+- Apply filters from validated request data before pagination
+- Response must include: `data`, `current_page`, `total_pages`, `total_registros`
+
+**Index Request Example:**
+```php
+<?php
+
+namespace App\Http\Requests\Actividad;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class IndexActividadesRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'cantidad' => 'sometimes|integer|min:1',
+            'pagina' => 'sometimes|integer|min:1',
+            'id_modelo_decision' => 'sometimes|integer|exists:modelos_decision,id',
+            'nombre' => 'sometimes|string',
+        ];
+    }
+}
+```
+
+**Controller Index Example:**
+```php
+public function index(IndexActividadesRequest $request)
+{
+    $validated = $request->validated();
+    $cantidad = $validated['cantidad'] ?? 10;
+    $pagina = $validated['pagina'] ?? 1;
+
+    $query = Actividad::query()->with('modeloDecision');
+
+    if (isset($validated['id_modelo_decision'])) {
+        $query->where('id_modelo_decision', $validated['id_modelo_decision']);
+    }
+
+    if (isset($validated['nombre'])) {
+        $query->where('nombre', $validated['nombre']);
+    }
+
+    $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
+
+    return response()->json([
+        'data' => $paginador->items(),
+        'current_page' => $paginador->currentPage(),
+        'total_pages' => $paginador->lastPage(),
+        'total_registros' => $paginador->total(),
+    ]);
+}
+```
+
+### Factory Pattern for Create/Update Operations
+- **All create and update operations must use dedicated factory classes in `app/Factories/`**
+- Factories encapsulate the logic for building/updating models from request data
+- Factory naming convention: `{ModelName}Factory` (e.g., `CodigosDescuentosFactory`)
+- Factory method signature: `fromRequest($request, ?Model $model = null): Model`
+- The method accepts validated request data (array) and an optional model instance (for updates)
+- Use null coalescing to preserve existing values when not provided in request
+- Controllers should call the factory method with `$validated` data and then explicitly call `save()`
+
+**Factory Example:**
+```php
+<?php
+
+namespace App\Factories;
+
+use App\Models\CodigoDescuento;
+
+class CodigosDescuentosFactory
+{
+    public static function fromRequest($request, ?CodigoDescuento $codigoDescuento = null): CodigoDescuento
+    {
+        $codigoDescuento = $codigoDescuento ?? new CodigoDescuento();
+        $codigoDescuento->codigo = isset($request['codigo']) ? $request['codigo'] : $codigoDescuento->codigo;
+        $codigoDescuento->nombre = isset($request['nombre']) ? $request['nombre'] : $codigoDescuento->nombre;
+        
+        return $codigoDescuento;
+    }
+}
+```
+
+**Controller Usage:**
+```php
+// Create
+$validated = $request->validated();
+$model = CodigosDescuentosFactory::fromRequest($validated);
+$model->save();
+
+// Update
+$validated = $request->validated();
+$model = CodigosDescuentosFactory::fromRequest($validated, $existingModel);
+$model->save();
+```
+
 ### API Development
 - API routes automatically prefixed with `/api`
 - Use Sanctum middleware (`auth:sanctum`) for protected endpoints
 - Return JSON responses using Laravel's response helpers or API Resources
-- Consider using Form Requests for validation
+- Always use Form Requests for validation (see Request Validation Pattern above)
 
 ### Queue Workers
 - Queue connection uses database driver by default

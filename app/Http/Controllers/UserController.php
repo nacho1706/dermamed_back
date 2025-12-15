@@ -2,39 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Factories\UserFactory;
+use App\Http\Requests\User\IndexUsersRequest;
+use App\Http\Requests\User\LoginUserRequest;
+use App\Http\Requests\User\RegisterUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
-    /**
-     * Register a new user
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function register(Request $request)
+    public function register(RegisterUserRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = UserFactory::fromRequest($validated);
+        $user->save();
 
         $token = JWTAuth::fromUser($user);
 
@@ -46,26 +29,14 @@ class UserController extends Controller
         ], 201);
     }
 
-    /**
-     * Login user and return JWT token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function login(Request $request)
+    public function login(LoginUserRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $credentials = $request->only('email', 'password');
+        $credentials = [
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ];
 
         if (! $token = JWTAuth::attempt($credentials)) {
             return response()->json([
@@ -74,7 +45,7 @@ class UserController extends Controller
             ], 401);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $validated['email'])->first();
 
         return response()->json([
             'success' => true,
@@ -84,18 +55,29 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Get all registered users
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function index()
+    public function index(IndexUsersRequest $request)
     {
-        $users = User::all();
+        $validated = $request->validated();
+        $cantidad = $validated['cantidad'] ?? 10;
+        $pagina = $validated['pagina'] ?? 1;
+
+        $query = User::query();
+
+        if (isset($validated['name'])) {
+            $query->where('name', 'like', '%' . $validated['name'] . '%');
+        }
+
+        if (isset($validated['email'])) {
+            $query->where('email', 'like', '%' . $validated['email'] . '%');
+        }
+
+        $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
 
         return response()->json([
-            'success' => true,
-            'users' => $users,
+            'data' => $paginador->items(),
+            'current_page' => $paginador->currentPage(),
+            'total_pages' => $paginador->lastPage(),
+            'total_registros' => $paginador->total(),
         ]);
     }
 
@@ -122,13 +104,7 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Update a user
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, $id)
     {
         $user = User::find($id);
 
@@ -139,31 +115,9 @@ class UserController extends Controller
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
-            'password' => 'sometimes|required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        if ($request->has('name')) {
-            $user->name = $request->name;
-        }
-
-        if ($request->has('email')) {
-            $user->email = $request->email;
-        }
-
-        if ($request->has('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
+        $user = UserFactory::fromRequest($validated, $user);
         $user->save();
 
         return response()->json([
