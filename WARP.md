@@ -16,25 +16,25 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 This project uses Docker for development. All commands must be executed inside the Docker container:
 
 ```bash
-docker exec -it backend-facet-gestion <command>
+docker exec -it backend-dermamed <command>
 ```
 
 For convenience, you can create an alias:
 ```bash
-alias dexec='docker exec -it backend-facet-gestion'
+alias dexec='docker exec -it backend-dermamed'
 ```
 
 ## Development Commands
 
 ### Initial Setup
 ```bash
-docker exec -it backend-facet-gestion composer setup
+docker exec -it backend-dermamed composer setup
 ```
 This runs the complete setup: installs dependencies, copies .env, generates app key, runs migrations, and builds assets.
 
 ### Development Server
 ```bash
-docker exec -it backend-facet-gestion composer dev
+docker exec -it backend-dermamed composer dev
 ```
 Starts concurrent processes:
 - Laravel development server (port 8000)
@@ -44,25 +44,25 @@ Starts concurrent processes:
 
 Alternatively, run individually:
 ```bash
-docker exec -it backend-facet-gestion php artisan serve
-docker exec -it backend-facet-gestion php artisan queue:listen --tries=1
-docker exec -it backend-facet-gestion php artisan pail --timeout=0
+docker exec -it backend-dermamed php artisan serve
+docker exec -it backend-dermamed php artisan queue:listen --tries=1
+docker exec -it backend-dermamed php artisan pail --timeout=0
 ```
 
 ### Testing
 ```bash
 # Run all tests
-docker exec -it backend-facet-gestion composer test
+docker exec -it backend-dermamed composer test
 
 # Run specific test suite
-docker exec -it backend-facet-gestion php artisan test --testsuite=Unit
-docker exec -it backend-facet-gestion php artisan test --testsuite=Feature
+docker exec -it backend-dermamed php artisan test --testsuite=Unit
+docker exec -it backend-dermamed php artisan test --testsuite=Feature
 
 # Run specific test file
-docker exec -it backend-facet-gestion php artisan test tests/Feature/ExampleTest.php
+docker exec -it backend-dermamed php artisan test tests/Feature/ExampleTest.php
 
 # Run with coverage
-docker exec -it backend-facet-gestion php artisan test --coverage
+docker exec -it backend-dermamed php artisan test --coverage
 ```
 
 Tests use an in-memory SQLite database and array-based cache/queue drivers for speed.
@@ -70,52 +70,52 @@ Tests use an in-memory SQLite database and array-based cache/queue drivers for s
 ### Code Quality
 ```bash
 # Format code (Laravel Pint)
-docker exec -it backend-facet-gestion ./vendor/bin/pint
+docker exec -it backend-dermamed ./vendor/bin/pint
 
 # Format specific files/directories
-docker exec -it backend-facet-gestion ./vendor/bin/pint app/Models
-docker exec -it backend-facet-gestion ./vendor/bin/pint app/Http/Controllers/UserController.php
+docker exec -it backend-dermamed ./vendor/bin/pint app/Models
+docker exec -it backend-dermamed ./vendor/bin/pint app/Http/Controllers/UserController.php
 ```
 
 ### Database Operations
 ```bash
 # Run migrations
-docker exec -it backend-facet-gestion php artisan migrate
+docker exec -it backend-dermamed php artisan migrate
 
 # Rollback last migration
-docker exec -it backend-facet-gestion php artisan migrate:rollback
+docker exec -it backend-dermamed php artisan migrate:rollback
 
 # Fresh database with seeders
-docker exec -it backend-facet-gestion php artisan migrate:fresh --seed
+docker exec -it backend-dermamed php artisan migrate:fresh --seed
 
 # Create new migration
-docker exec -it backend-facet-gestion php artisan make:migration create_table_name
+docker exec -it backend-dermamed php artisan make:migration create_table_name
 
 # Check migration status
-docker exec -it backend-facet-gestion php artisan migrate:status
+docker exec -it backend-dermamed php artisan migrate:status
 ```
 
 ### Artisan Commands
 ```bash
 # List all artisan commands
-docker exec -it backend-facet-gestion php artisan list
+docker exec -it backend-dermamed php artisan list
 
 # Interactive REPL (Tinker)
-docker exec -it backend-facet-gestion php artisan tinker
+docker exec -it backend-dermamed php artisan tinker
 
 # Clear caches
-docker exec -it backend-facet-gestion php artisan config:clear
-docker exec -it backend-facet-gestion php artisan cache:clear
-docker exec -it backend-facet-gestion php artisan route:clear
-docker exec -it backend-facet-gestion php artisan view:clear
+docker exec -it backend-dermamed php artisan config:clear
+docker exec -it backend-dermamed php artisan cache:clear
+docker exec -it backend-dermamed php artisan route:clear
+docker exec -it backend-dermamed php artisan view:clear
 
 # Generate resources
-docker exec -it backend-facet-gestion php artisan make:model ModelName -mfc
-docker exec -it backend-facet-gestion php artisan make:controller ControllerName
-docker exec -it backend-facet-gestion php artisan make:request RequestName
-docker exec -it backend-facet-gestion php artisan make:resource ResourceName
-docker exec -it backend-facet-gestion php artisan make:seeder SeederName
-docker exec -it backend-facet-gestion php artisan make:factory FactoryName
+docker exec -it backend-dermamed php artisan make:model ModelName -mfc
+docker exec -it backend-dermamed php artisan make:controller ControllerName
+docker exec -it backend-dermamed php artisan make:request RequestName
+docker exec -it backend-dermamed php artisan make:resource ResourceName
+docker exec -it backend-dermamed php artisan make:seeder SeederName
+docker exec -it backend-dermamed php artisan make:factory FactoryName
 ```
 
 ### Docker Deployment
