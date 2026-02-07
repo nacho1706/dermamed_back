@@ -1,0 +1,43 @@
+# --- Control de Versiones y Sistema ---
+.git
+.gitignore
+.DS_Store
+Thumbs.db
+
+# --- Configuración de Entorno (SEGURIDAD CRÍTICA) ---
+.env
+.env.*
+auth.json
+Homestead.json
+Homestead.yaml
+
+# --- Dependencias (Se instalan dentro, no se copian) ---
+/vendor
+/node_modules
+
+# --- IDEs y Editores ---
+.idea
+.vscode
+.fleet
+.zed
+.nova
+.phpactor.json
+*.sublime-project
+*.sublime-workspace
+
+# --- Laravel Específico ---
+# No queremos logs locales ni claves de encriptación locales en la imagen
+/storage/*.key
+/storage/logs/*.log
+.phpunit.result.cache
+.phpunit.cache
+
+# --- Build Artifacts de Frontend (si existen en backend) ---
+/public/build
+/public/hot
+/public/storage
+
+# --- Docker ---
+Dockerfile
+docker-compose*
+README.md
