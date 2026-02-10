@@ -1,11 +1,32 @@
+# 1. Normalización Global
 * text=auto eol=lf
 
+# 2. Definición de Diff
 *.blade.php diff=html
 *.css diff=css
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
 
+# 3. Extensiones de Frontend (Next.js / TypeScript)
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+
+# 4. Protección de Binarios (CRÍTICO)
+# Evita que Git intente "arreglar" finales de línea en imágenes
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+
+# 5. Ignorar en Exportación
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore

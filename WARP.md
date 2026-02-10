@@ -5,7 +5,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 ## Tech Stack
 
 - **Framework**: Laravel 12 (PHP 8.2+)
-- **Database**: SQLite (default), supports PostgreSQL
+- **Database**:  PostgreSQL
 - **API Authentication**: JWT (tymon/jwt-auth) - stateless token-based authentication
 - **Queue Driver**: Database-backed queues
 - **Session Storage**: Database-backed sessions
