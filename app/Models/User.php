@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
@@ -18,9 +19,13 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
+        'role_id',
         'name',
         'email',
         'password',
+        'cuit',
+        'specialty',
+        'is_active',
     ];
 
     /**
@@ -30,7 +35,6 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $hidden = [
         'password',
-        'remember_token',
     ];
 
     /**
@@ -41,8 +45,8 @@ class User extends Authenticatable implements JWTSubject
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -64,5 +68,37 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    /**
+     * Get the role for this user.
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Get the appointments where this user is the doctor.
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id');
+    }
+
+    /**
+     * Get the medical records created by this doctor.
+     */
+    public function medicalRecords(): HasMany
+    {
+        return $this->hasMany(MedicalRecord::class, 'doctor_id');
+    }
+
+    /**
+     * Get the availability slots for this doctor.
+     */
+    public function availabilities(): HasMany
+    {
+        return $this->hasMany(DoctorAvailability::class, 'doctor_id');
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\User;
+namespace App\Http\Requests\StockMovement;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class IndexUsersRequest extends FormRequest
+class IndexStockMovementsRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,10 +16,8 @@ class IndexUsersRequest extends FormRequest
         return [
             'cantidad' => 'sometimes|integer|min:1',
             'pagina' => 'sometimes|integer|min:1',
-            'name' => 'sometimes|string',
-            'email' => 'sometimes|email',
-            'role_id' => 'sometimes|integer|exists:roles,id',
-            'is_active' => 'sometimes|boolean',
+            'product_id' => 'sometimes|integer|exists:products,id',
+            'type' => 'sometimes|string|in:in,out,adjustment',
         ];
     }
 }

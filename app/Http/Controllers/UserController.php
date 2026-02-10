@@ -24,7 +24,7 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User registered successfully',
-            'user' => $user,
+            'user' => $user->load('role'),
             'token' => $token,
         ], 201);
     }
@@ -45,7 +45,7 @@ class UserController extends Controller
             ], 401);
         }
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = User::where('email', $validated['email'])->with('role')->first();
 
         return response()->json([
             'success' => true,
@@ -61,7 +61,7 @@ class UserController extends Controller
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
-        $query = User::query();
+        $query = User::query()->with('role');
 
         if (isset($validated['name'])) {
             $query->where('name', 'like', '%' . $validated['name'] . '%');
@@ -69,6 +69,14 @@ class UserController extends Controller
 
         if (isset($validated['email'])) {
             $query->where('email', 'like', '%' . $validated['email'] . '%');
+        }
+
+        if (isset($validated['role_id'])) {
+            $query->where('role_id', $validated['role_id']);
+        }
+
+        if (isset($validated['is_active'])) {
+            $query->where('is_active', $validated['is_active']);
         }
 
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
@@ -81,15 +89,9 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Get a specific user
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function show($id)
     {
-        $user = User::find($id);
+        $user = User::with('role')->find($id);
 
         if (! $user) {
             return response()->json([
@@ -123,16 +125,10 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully',
-            'user' => $user,
+            'user' => $user->load('role'),
         ]);
     }
 
-    /**
-     * Delete a user
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function destroy($id)
     {
         $user = User::find($id);
@@ -152,24 +148,14 @@ class UserController extends Controller
         ]);
     }
 
-    // /**
-    //  * Get the authenticated user
-    //  *
-    //  * @return \Illuminate\Http\JsonResponse
-    //  */
-    // public function me()
-    // {
-    //     return response()->json([
-    //         'success' => true,
-    //         'user' => auth()->user(),
-    //     ]);
-    // }
+    public function me()
+    {
+        return response()->json([
+            'success' => true,
+            'user' => auth()->user()->load('role'),
+        ]);
+    }
 
-    /**
-     * Logout user (invalidate token)
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function logout()
     {
         JWTAuth::invalidate(JWTAuth::getToken());
@@ -180,11 +166,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Refresh the JWT token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function refresh()
     {
         $token = JWTAuth::refresh(JWTAuth::getToken());

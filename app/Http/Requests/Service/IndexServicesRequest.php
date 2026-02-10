@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\User;
+namespace App\Http\Requests\Service;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class IndexUsersRequest extends FormRequest
+class IndexServicesRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,9 +17,6 @@ class IndexUsersRequest extends FormRequest
             'cantidad' => 'sometimes|integer|min:1',
             'pagina' => 'sometimes|integer|min:1',
             'name' => 'sometimes|string',
-            'email' => 'sometimes|email',
-            'role_id' => 'sometimes|integer|exists:roles,id',
-            'is_active' => 'sometimes|boolean',
         ];
     }
 }
