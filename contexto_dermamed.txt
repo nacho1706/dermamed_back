@@ -45,10 +45,6 @@ FASE 2: Gestión de Clínica (V1.0)
 Finanzas Light: Generación de "Comprobantes de Pago" (PDF no fiscales) para control interno.
 Inventario: Control de stock de cremas/ácidos con alertas de "Stock Bajo".
 Reportes Básicos: Pacientes atendidos vs. Ingresos.
-FASE 3: Escalabilidad (Futuro)
-Portal del Paciente (Autogestión).
-Integración Fiscal (Facturación Electrónica AFIP).
-Pagos Online (Mercado Pago).
 6. GLOSARIO DE NEGOCIO
 PMS: Practice Management System.
 EHR: Electronic Health Record (Historia Clínica).
