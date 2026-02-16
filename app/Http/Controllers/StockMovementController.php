@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Factories\StockMovementFactory;
 use App\Http\Requests\StockMovement\IndexStockMovementsRequest;
 use App\Http\Requests\StockMovement\StoreStockMovementRequest;
+use App\Http\Resources\StockMovementResource;
 use App\Models\Product;
 use App\Models\StockMovement;
 
@@ -28,12 +29,7 @@ class StockMovementController extends Controller
 
         $paginador = $query->orderBy('created_at', 'desc')->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return StockMovementResource::collection($paginador);
     }
 
     public function store(StoreStockMovementRequest $request)
@@ -60,27 +56,17 @@ class StockMovementController extends Controller
             $product->save();
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Stock movement created successfully',
-            'stock_movement' => $movement->load(['product', 'user']),
-        ], 201);
+        $movement->load(['product', 'user']);
+
+        return (new StockMovementResource($movement))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(StockMovement $stockMovement)
     {
-        $movement = StockMovement::with(['product', 'user'])->find($id);
+        $stockMovement->load(['product', 'user']);
 
-        if (! $movement) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Stock movement not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'stock_movement' => $movement,
-        ]);
+        return new StockMovementResource($stockMovement);
     }
 }

@@ -6,6 +6,7 @@ use App\Factories\AppointmentFactory;
 use App\Http\Requests\Appointment\IndexAppointmentsRequest;
 use App\Http\Requests\Appointment\StoreAppointmentRequest;
 use App\Http\Requests\Appointment\UpdateAppointmentRequest;
+use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 
 class AppointmentController extends Controller
@@ -44,12 +45,7 @@ class AppointmentController extends Controller
 
         $paginador = $query->orderBy('start_time', 'asc')->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return AppointmentResource::collection($paginador);
     }
 
     public function store(StoreAppointmentRequest $request)
@@ -58,69 +54,36 @@ class AppointmentController extends Controller
 
         $appointment = AppointmentFactory::fromRequest($validated);
         $appointment->save();
+        $appointment->load(['patient', 'doctor', 'service']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Appointment created successfully',
-            'appointment' => $appointment->load(['patient', 'doctor', 'service']),
-        ], 201);
+        return (new AppointmentResource($appointment))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(Appointment $appointment)
     {
-        $appointment = Appointment::with(['patient', 'doctor', 'service', 'medicalRecord'])->find($id);
+        $appointment->load(['patient', 'doctor', 'service', 'medicalRecord']);
 
-        if (! $appointment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Appointment not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'appointment' => $appointment,
-        ]);
+        return new AppointmentResource($appointment);
     }
 
-    public function update(UpdateAppointmentRequest $request, $id)
+    public function update(UpdateAppointmentRequest $request, Appointment $appointment)
     {
-        $appointment = Appointment::find($id);
-
-        if (! $appointment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Appointment not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
         $appointment = AppointmentFactory::fromRequest($validated, $appointment);
         $appointment->save();
+        $appointment->load(['patient', 'doctor', 'service']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Appointment updated successfully',
-            'appointment' => $appointment->load(['patient', 'doctor', 'service']),
-        ]);
+        return new AppointmentResource($appointment);
     }
 
-    public function destroy($id)
+    public function destroy(Appointment $appointment)
     {
-        $appointment = Appointment::find($id);
-
-        if (! $appointment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Appointment not found',
-            ], 404);
-        }
-
         $appointment->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Appointment deleted successfully',
         ]);
     }

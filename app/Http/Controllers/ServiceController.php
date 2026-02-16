@@ -6,6 +6,7 @@ use App\Factories\ServiceFactory;
 use App\Http\Requests\Service\IndexServicesRequest;
 use App\Http\Requests\Service\StoreServiceRequest;
 use App\Http\Requests\Service\UpdateServiceRequest;
+use App\Http\Resources\ServiceResource;
 use App\Models\Service;
 
 class ServiceController extends Controller
@@ -24,12 +25,7 @@ class ServiceController extends Controller
 
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return ServiceResource::collection($paginador);
     }
 
     public function store(StoreServiceRequest $request)
@@ -39,68 +35,31 @@ class ServiceController extends Controller
         $service = ServiceFactory::fromRequest($validated);
         $service->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Service created successfully',
-            'service' => $service,
-        ], 201);
+        return (new ServiceResource($service))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(Service $service)
     {
-        $service = Service::find($id);
-
-        if (! $service) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Service not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'service' => $service,
-        ]);
+        return new ServiceResource($service);
     }
 
-    public function update(UpdateServiceRequest $request, $id)
+    public function update(UpdateServiceRequest $request, Service $service)
     {
-        $service = Service::find($id);
-
-        if (! $service) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Service not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
         $service = ServiceFactory::fromRequest($validated, $service);
         $service->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Service updated successfully',
-            'service' => $service,
-        ]);
+        return new ServiceResource($service);
     }
 
-    public function destroy($id)
+    public function destroy(Service $service)
     {
-        $service = Service::find($id);
-
-        if (! $service) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Service not found',
-            ], 404);
-        }
-
         $service->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Service deleted successfully',
         ]);
     }

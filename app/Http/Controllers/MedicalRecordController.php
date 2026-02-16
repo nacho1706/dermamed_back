@@ -6,6 +6,7 @@ use App\Factories\MedicalRecordFactory;
 use App\Http\Requests\MedicalRecord\IndexMedicalRecordsRequest;
 use App\Http\Requests\MedicalRecord\StoreMedicalRecordRequest;
 use App\Http\Requests\MedicalRecord\UpdateMedicalRecordRequest;
+use App\Http\Resources\MedicalRecordResource;
 use App\Models\MedicalRecord;
 
 class MedicalRecordController extends Controller
@@ -28,12 +29,7 @@ class MedicalRecordController extends Controller
 
         $paginador = $query->orderBy('date', 'desc')->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return MedicalRecordResource::collection($paginador);
     }
 
     public function store(StoreMedicalRecordRequest $request)
@@ -42,69 +38,36 @@ class MedicalRecordController extends Controller
 
         $record = MedicalRecordFactory::fromRequest($validated);
         $record->save();
+        $record->load(['patient', 'doctor', 'appointment']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Medical record created successfully',
-            'medical_record' => $record->load(['patient', 'doctor', 'appointment']),
-        ], 201);
+        return (new MedicalRecordResource($record))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(MedicalRecord $medicalRecord)
     {
-        $record = MedicalRecord::with(['patient', 'doctor', 'appointment'])->find($id);
+        $medicalRecord->load(['patient', 'doctor', 'appointment']);
 
-        if (! $record) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Medical record not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'medical_record' => $record,
-        ]);
+        return new MedicalRecordResource($medicalRecord);
     }
 
-    public function update(UpdateMedicalRecordRequest $request, $id)
+    public function update(UpdateMedicalRecordRequest $request, MedicalRecord $medicalRecord)
     {
-        $record = MedicalRecord::find($id);
-
-        if (! $record) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Medical record not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
-        $record = MedicalRecordFactory::fromRequest($validated, $record);
-        $record->save();
+        $medicalRecord = MedicalRecordFactory::fromRequest($validated, $medicalRecord);
+        $medicalRecord->save();
+        $medicalRecord->load(['patient', 'doctor', 'appointment']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Medical record updated successfully',
-            'medical_record' => $record->load(['patient', 'doctor', 'appointment']),
-        ]);
+        return new MedicalRecordResource($medicalRecord);
     }
 
-    public function destroy($id)
+    public function destroy(MedicalRecord $medicalRecord)
     {
-        $record = MedicalRecord::find($id);
-
-        if (! $record) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Medical record not found',
-            ], 404);
-        }
-
-        $record->delete();
+        $medicalRecord->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Medical record deleted successfully',
         ]);
     }

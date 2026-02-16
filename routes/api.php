@@ -28,11 +28,11 @@ Route::middleware('auth:api')->group(function () {
     // Users: list/view for admin & receptionist; modify/delete admin only
     Route::middleware('role:admin,receptionist')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
-        Route::get('/users/{id}', [UserController::class, 'show']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
     });
     Route::middleware('role:admin')->group(function () {
-        Route::put('/users/{id}', [UserController::class, 'update']);
-        Route::delete('/users/{id}', [UserController::class, 'destroy']);
+        Route::put('/users/{user}', [UserController::class, 'update']);
+        Route::delete('/users/{user}', [UserController::class, 'destroy']);
     });
 
     // Patients: full CRUD for admin & receptionist; read-only for doctors

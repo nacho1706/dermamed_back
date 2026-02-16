@@ -7,6 +7,7 @@ use App\Http\Requests\User\IndexUsersRequest;
 use App\Http\Requests\User\LoginUserRequest;
 use App\Http\Requests\User\RegisterUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -18,13 +19,12 @@ class UserController extends Controller
 
         $user = UserFactory::fromRequest($validated);
         $user->save();
+        $user->load('role');
 
         $token = JWTAuth::fromUser($user);
 
         return response()->json([
-            'success' => true,
-            'message' => 'User registered successfully',
-            'user' => $user->load('role'),
+            'user'  => new UserResource($user),
             'token' => $token,
         ], 201);
     }
@@ -34,13 +34,12 @@ class UserController extends Controller
         $validated = $request->validated();
 
         $credentials = [
-            'email' => $validated['email'],
+            'email'    => $validated['email'],
             'password' => $validated['password'],
         ];
 
         if (! $token = JWTAuth::attempt($credentials)) {
             return response()->json([
-                'success' => false,
                 'message' => 'Invalid credentials',
             ], 401);
         }
@@ -48,9 +47,7 @@ class UserController extends Controller
         $user = User::where('email', $validated['email'])->with('role')->first();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
-            'user' => $user,
+            'user'  => new UserResource($user),
             'token' => $token,
         ]);
     }
@@ -81,79 +78,42 @@ class UserController extends Controller
 
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return UserResource::collection($paginador);
     }
 
-    public function show($id)
+    public function show(User $user)
     {
-        $user = User::with('role')->find($id);
+        $user->load('role');
 
-        if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'user' => $user,
-        ]);
+        return new UserResource($user);
     }
 
-    public function update(UpdateUserRequest $request, $id)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $user = User::find($id);
-
-        if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
         $user = UserFactory::fromRequest($validated, $user);
         $user->save();
+        $user->load('role');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User updated successfully',
-            'user' => $user->load('role'),
-        ]);
+        return new UserResource($user);
     }
 
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::find($id);
-
-        if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found',
-            ], 404);
-        }
-
         $user->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'User deleted successfully',
         ]);
     }
 
     public function me()
     {
-        return response()->json([
-            'success' => true,
-            'user' => auth()->user()->load('role'),
-        ]);
+        $user = auth()->user();
+        $user->load('role');
+
+        return new UserResource($user);
     }
 
     public function logout()
@@ -161,7 +121,6 @@ class UserController extends Controller
         JWTAuth::invalidate(JWTAuth::getToken());
 
         return response()->json([
-            'success' => true,
             'message' => 'Successfully logged out',
         ]);
     }
@@ -171,7 +130,6 @@ class UserController extends Controller
         $token = JWTAuth::refresh(JWTAuth::getToken());
 
         return response()->json([
-            'success' => true,
             'token' => $token,
         ]);
     }

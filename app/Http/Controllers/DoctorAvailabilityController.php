@@ -6,6 +6,7 @@ use App\Factories\DoctorAvailabilityFactory;
 use App\Http\Requests\DoctorAvailability\IndexDoctorAvailabilitiesRequest;
 use App\Http\Requests\DoctorAvailability\StoreDoctorAvailabilityRequest;
 use App\Http\Requests\DoctorAvailability\UpdateDoctorAvailabilityRequest;
+use App\Http\Resources\DoctorAvailabilityResource;
 use App\Models\DoctorAvailability;
 
 class DoctorAvailabilityController extends Controller
@@ -24,12 +25,7 @@ class DoctorAvailabilityController extends Controller
 
         $paginador = $query->orderBy('day_of_week')->orderBy('start_time')->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return DoctorAvailabilityResource::collection($paginador);
     }
 
     public function store(StoreDoctorAvailabilityRequest $request)
@@ -38,69 +34,36 @@ class DoctorAvailabilityController extends Controller
 
         $availability = DoctorAvailabilityFactory::fromRequest($validated);
         $availability->save();
+        $availability->load('doctor');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Doctor availability created successfully',
-            'doctor_availability' => $availability->load('doctor'),
-        ], 201);
+        return (new DoctorAvailabilityResource($availability))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(DoctorAvailability $doctorAvailability)
     {
-        $availability = DoctorAvailability::with('doctor')->find($id);
+        $doctorAvailability->load('doctor');
 
-        if (! $availability) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Doctor availability not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'doctor_availability' => $availability,
-        ]);
+        return new DoctorAvailabilityResource($doctorAvailability);
     }
 
-    public function update(UpdateDoctorAvailabilityRequest $request, $id)
+    public function update(UpdateDoctorAvailabilityRequest $request, DoctorAvailability $doctorAvailability)
     {
-        $availability = DoctorAvailability::find($id);
-
-        if (! $availability) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Doctor availability not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
-        $availability = DoctorAvailabilityFactory::fromRequest($validated, $availability);
-        $availability->save();
+        $doctorAvailability = DoctorAvailabilityFactory::fromRequest($validated, $doctorAvailability);
+        $doctorAvailability->save();
+        $doctorAvailability->load('doctor');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Doctor availability updated successfully',
-            'doctor_availability' => $availability->load('doctor'),
-        ]);
+        return new DoctorAvailabilityResource($doctorAvailability);
     }
 
-    public function destroy($id)
+    public function destroy(DoctorAvailability $doctorAvailability)
     {
-        $availability = DoctorAvailability::find($id);
-
-        if (! $availability) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Doctor availability not found',
-            ], 404);
-        }
-
-        $availability->delete();
+        $doctorAvailability->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Doctor availability deleted successfully',
         ]);
     }

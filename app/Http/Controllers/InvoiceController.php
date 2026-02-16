@@ -6,6 +6,7 @@ use App\Factories\InvoiceFactory;
 use App\Http\Requests\Invoice\IndexInvoicesRequest;
 use App\Http\Requests\Invoice\StoreInvoiceRequest;
 use App\Http\Requests\Invoice\UpdateInvoiceRequest;
+use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 
 class InvoiceController extends Controller
@@ -28,12 +29,7 @@ class InvoiceController extends Controller
 
         $paginador = $query->orderBy('date', 'desc')->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return InvoiceResource::collection($paginador);
     }
 
     public function store(StoreInvoiceRequest $request)
@@ -42,69 +38,36 @@ class InvoiceController extends Controller
 
         $invoice = InvoiceFactory::fromRequest($validated);
         $invoice->save();
+        $invoice->load(['patient', 'voucherType']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Invoice created successfully',
-            'invoice' => $invoice->load(['patient', 'voucherType']),
-        ], 201);
+        return (new InvoiceResource($invoice))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(Invoice $invoice)
     {
-        $invoice = Invoice::with(['patient', 'voucherType', 'items', 'payments.paymentMethod'])->find($id);
+        $invoice->load(['patient', 'voucherType', 'items.product', 'items.service', 'payments.paymentMethod']);
 
-        if (! $invoice) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'invoice' => $invoice,
-        ]);
+        return new InvoiceResource($invoice);
     }
 
-    public function update(UpdateInvoiceRequest $request, $id)
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice)
     {
-        $invoice = Invoice::find($id);
-
-        if (! $invoice) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
         $invoice = InvoiceFactory::fromRequest($validated, $invoice);
         $invoice->save();
+        $invoice->load(['patient', 'voucherType']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Invoice updated successfully',
-            'invoice' => $invoice->load(['patient', 'voucherType']),
-        ]);
+        return new InvoiceResource($invoice);
     }
 
-    public function destroy($id)
+    public function destroy(Invoice $invoice)
     {
-        $invoice = Invoice::find($id);
-
-        if (! $invoice) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice not found',
-            ], 404);
-        }
-
         $invoice->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Invoice deleted successfully',
         ]);
     }

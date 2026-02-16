@@ -6,6 +6,7 @@ use App\Factories\ProductFactory;
 use App\Http\Requests\Product\IndexProductsRequest;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
 
 class ProductController extends Controller
@@ -24,12 +25,7 @@ class ProductController extends Controller
 
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
 
-        return response()->json([
-            'data' => $paginador->items(),
-            'current_page' => $paginador->currentPage(),
-            'total_pages' => $paginador->lastPage(),
-            'total_registros' => $paginador->total(),
-        ]);
+        return ProductResource::collection($paginador);
     }
 
     public function store(StoreProductRequest $request)
@@ -39,68 +35,31 @@ class ProductController extends Controller
         $product = ProductFactory::fromRequest($validated);
         $product->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product created successfully',
-            'product' => $product,
-        ], 201);
+        return (new ProductResource($product))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($id)
+    public function show(Product $product)
     {
-        $product = Product::find($id);
-
-        if (! $product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'product' => $product,
-        ]);
+        return new ProductResource($product);
     }
 
-    public function update(UpdateProductRequest $request, $id)
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $product = Product::find($id);
-
-        if (! $product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
 
         $product = ProductFactory::fromRequest($validated, $product);
         $product->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product updated successfully',
-            'product' => $product,
-        ]);
+        return new ProductResource($product);
     }
 
-    public function destroy($id)
+    public function destroy(Product $product)
     {
-        $product = Product::find($id);
-
-        if (! $product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found',
-            ], 404);
-        }
-
         $product->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Product deleted successfully',
         ]);
     }

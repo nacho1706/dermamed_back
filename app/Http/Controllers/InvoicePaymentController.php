@@ -4,69 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Factories\InvoicePaymentFactory;
 use App\Http\Requests\InvoicePayment\StoreInvoicePaymentRequest;
+use App\Http\Resources\InvoicePaymentResource;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
 
 class InvoicePaymentController extends Controller
 {
-    public function store(StoreInvoicePaymentRequest $request, $invoiceId)
+    public function store(StoreInvoicePaymentRequest $request, Invoice $invoice)
     {
-        $invoice = Invoice::find($invoiceId);
-
-        if (! $invoice) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice not found',
-            ], 404);
-        }
-
         $validated = $request->validated();
         $validated['invoice_id'] = $invoice->id;
 
         $payment = InvoicePaymentFactory::fromRequest($validated);
         $payment->save();
+        $payment->load('paymentMethod');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Invoice payment created successfully',
-            'invoice_payment' => $payment->load('paymentMethod'),
-        ], 201);
+        return (new InvoicePaymentResource($payment))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show($invoiceId, $id)
+    public function show(Invoice $invoice, InvoicePayment $payment)
     {
-        $payment = InvoicePayment::with(['invoice', 'paymentMethod'])
-            ->where('invoice_id', $invoiceId)
-            ->find($id);
+        $payment->load('paymentMethod');
 
-        if (! $payment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice payment not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'invoice_payment' => $payment,
-        ]);
+        return new InvoicePaymentResource($payment);
     }
 
-    public function destroy($invoiceId, $id)
+    public function destroy(Invoice $invoice, InvoicePayment $payment)
     {
-        $payment = InvoicePayment::where('invoice_id', $invoiceId)->find($id);
-
-        if (! $payment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice payment not found',
-            ], 404);
-        }
-
         $payment->delete();
 
         return response()->json([
-            'success' => true,
             'message' => 'Invoice payment deleted successfully',
         ]);
     }
