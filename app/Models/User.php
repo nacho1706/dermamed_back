@@ -101,4 +101,40 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(DoctorAvailability::class, 'doctor_id');
     }
+
+    /**
+     * Check if the user has the admin role.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role_id === 1;
+    }
+
+    /**
+     * Check if the user has the doctor role.
+     */
+    public function isDoctor(): bool
+    {
+        return $this->role_id === 2;
+    }
+
+    /**
+     * Check if the user has the receptionist role.
+     */
+    public function isReceptionist(): bool
+    {
+        return $this->role_id === 3;
+    }
+
+    /**
+     * Check if the user has a specific role by name.
+     */
+    public function hasRole(string $role): bool
+    {
+        if (! $this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        return $this->role->name === $role;
+    }
 }
