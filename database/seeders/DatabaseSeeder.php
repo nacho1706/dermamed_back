@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PaymentMethodSeeder::class,
             VoucherTypeSeeder::class,
+            ServiceSeeder::class,
         ]);
 
         // Create default admin user
