@@ -16,11 +16,18 @@ class StorePatientRequest extends FormRequest
         return [
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'cuit' => 'nullable|string|max:20|unique:patients',
+            'cuit' => 'nullable|string|digits:11|unique:patients',
             'email' => 'nullable|string|email|max:255',
             'phone' => 'nullable|string|max:50',
             'birth_date' => 'nullable|date',
-            'address' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:150',
+            'street_number' => 'nullable|string|max:10',
+            'floor' => 'nullable|string|max:10',
+            'apartment' => 'nullable|string|max:10',
+            'city' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'zip_code' => 'nullable|string|max:10',
+            'country' => 'nullable|string|max:100',
             'insurance_provider' => 'nullable|string|max:100',
         ];
     }

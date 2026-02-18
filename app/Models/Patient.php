@@ -19,7 +19,14 @@ class Patient extends Model
         'email',
         'phone',
         'birth_date',
-        'address',
+        'street',
+        'street_number',
+        'floor',
+        'apartment',
+        'city',
+        'province',
+        'zip_code',
+        'country',
         'insurance_provider',
     ];
 
@@ -33,6 +40,46 @@ class Patient extends Model
         return [
             'birth_date' => 'date',
         ];
+    }
+
+    /**
+     * Get the formatted full address.
+     */
+    public function getFullAddressAttribute(): ?string
+    {
+        $parts = [];
+
+        if ($this->street) {
+            $address = $this->street;
+            if ($this->street_number) {
+                $address .= ' ' . $this->street_number;
+            }
+            if ($this->floor || $this->apartment) {
+                $subParts = [];
+                if ($this->floor) {
+                    $subParts[] = $this->floor . '°';
+                }
+                if ($this->apartment) {
+                    $subParts[] = $this->apartment;
+                }
+                $address .= ' (' . implode(' ', $subParts) . ')';
+            }
+            $parts[] = $address;
+        }
+
+        if ($this->city) {
+            $parts[] = $this->city;
+        }
+
+        if ($this->province) {
+            $parts[] = $this->province;
+        }
+
+        if ($this->zip_code) {
+            $parts[] = 'CP ' . $this->zip_code;
+        }
+
+        return count($parts) > 0 ? implode(', ', $parts) : null;
     }
 
     /**

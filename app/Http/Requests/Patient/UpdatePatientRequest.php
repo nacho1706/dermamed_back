@@ -18,11 +18,18 @@ class UpdatePatientRequest extends FormRequest
         return [
             'first_name' => 'sometimes|required|string|max:100',
             'last_name' => 'sometimes|required|string|max:100',
-            'cuit' => 'sometimes|nullable|string|max:20|unique:patients,cuit,' . $patientId,
+            'cuit' => 'sometimes|nullable|string|digits:11|unique:patients,cuit,' . $patientId,
             'email' => 'sometimes|nullable|string|email|max:255',
             'phone' => 'sometimes|nullable|string|max:50',
             'birth_date' => 'sometimes|nullable|date',
-            'address' => 'sometimes|nullable|string|max:255',
+            'street' => 'sometimes|nullable|string|max:150',
+            'street_number' => 'sometimes|nullable|string|max:10',
+            'floor' => 'sometimes|nullable|string|max:10',
+            'apartment' => 'sometimes|nullable|string|max:10',
+            'city' => 'sometimes|nullable|string|max:100',
+            'province' => 'sometimes|nullable|string|max:100',
+            'zip_code' => 'sometimes|nullable|string|max:10',
+            'country' => 'sometimes|nullable|string|max:100',
             'insurance_provider' => 'sometimes|nullable|string|max:100',
         ];
     }
