@@ -39,11 +39,24 @@ class StockMovementController extends Controller
         // Set the authenticated user as the one performing the movement
         $validated['user_id'] = auth()->id();
 
+        // Validate that stock withdrawals don't exceed available stock
+        if ($validated['type'] === 'out') {
+            $product = Product::find($validated['product_id']);
+            if ($product && $validated['quantity'] > $product->stock) {
+                return response()->json([
+                    'message' => 'La cantidad de salida supera el stock disponible.',
+                    'errors' => [
+                        'quantity' => ["No se pueden retirar {$validated['quantity']} unidades. Stock disponible: {$product->stock}."],
+                    ],
+                ], 422);
+            }
+        }
+
         $movement = StockMovementFactory::fromRequest($validated);
         $movement->save();
 
         // Update the product stock
-        $product = Product::find($validated['product_id']);
+        $product = $product ?? Product::find($validated['product_id']);
         if ($product) {
             if ($validated['type'] === 'in') {
                 $product->stock += $validated['quantity'];

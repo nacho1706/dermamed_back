@@ -28,6 +28,7 @@ class PatientResource extends JsonResource
             'country'    => $this->country,
             'full_address' => $this->full_address,
             'insurance_provider' => $this->insurance_provider,
+            'medical_records' => MedicalRecordResource::collection($this->whenLoaded('medicalRecords')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

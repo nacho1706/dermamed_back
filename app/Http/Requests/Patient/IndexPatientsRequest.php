@@ -19,6 +19,7 @@ class IndexPatientsRequest extends FormRequest
             'first_name' => 'sometimes|string',
             'last_name' => 'sometimes|string',
             'cuit' => 'sometimes|string',
+            'search' => 'sometimes|string',
         ];
     }
 }

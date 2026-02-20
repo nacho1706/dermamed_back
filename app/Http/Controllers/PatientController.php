@@ -31,6 +31,15 @@ class PatientController extends Controller
             $query->where('cuit', 'like', '%' . $validated['cuit'] . '%');
         }
 
+        if (isset($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', '%' . $search . '%')
+                  ->orWhere('last_name', 'like', '%' . $search . '%')
+                  ->orWhere('cuit', 'like', '%' . $search . '%');
+            });
+        }
+
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
 
         return PatientResource::collection($paginador);
@@ -48,8 +57,12 @@ class PatientController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(Patient $patient)
+    public function show(\Illuminate\Http\Request $request, Patient $patient)
     {
+        if ($request->user()->hasRole('doctor')) {
+            $patient->load('medicalRecords');
+        }
+        
         return new PatientResource($patient);
     }
 
