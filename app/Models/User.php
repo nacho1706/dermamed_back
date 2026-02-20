@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -20,13 +20,13 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'role_id',
         'name',
         'email',
         'password',
         'cuit',
         'specialty',
         'is_active',
+        'status',
     ];
 
     /**
@@ -72,11 +72,11 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Get the role for this user.
+     * Get the roles for this user.
      */
-    public function role(): BelongsTo
+    public function roles(): BelongsToMany
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsToMany(Role::class);
     }
 
     /**
@@ -104,27 +104,35 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Check if the user has the admin role.
+     * Check if the user is a System Admin.
      */
-    public function isAdmin(): bool
+    public function isSystemAdmin(): bool
     {
-        return $this->role_id === 1;
+        return $this->hasRole('system_admin');
     }
 
     /**
-     * Check if the user has the doctor role.
+     * Check if the user is a Clinic Manager.
+     */
+    public function isClinicManager(): bool
+    {
+        return $this->hasRole('clinic_manager');
+    }
+
+    /**
+     * Check if the user is a Doctor.
      */
     public function isDoctor(): bool
     {
-        return $this->role_id === 2;
+        return $this->hasRole('doctor');
     }
 
     /**
-     * Check if the user has the receptionist role.
+     * Check if the user is a Receptionist.
      */
     public function isReceptionist(): bool
     {
-        return $this->role_id === 3;
+        return $this->hasRole('receptionist');
     }
 
     /**
@@ -132,10 +140,10 @@ class User extends Authenticatable implements JWTSubject
      */
     public function hasRole(string $role): bool
     {
-        if (! $this->relationLoaded('role')) {
-            $this->load('role');
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
         }
 
-        return $this->role->name === $role;
+        return $this->roles->contains('name', $role);
     }
 }

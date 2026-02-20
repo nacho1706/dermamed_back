@@ -16,7 +16,7 @@ class UserResource extends JsonResource
             'cuit'      => $this->cuit,
             'specialty' => $this->specialty,
             'is_active' => $this->is_active,
-            'role'      => new RoleResource($this->whenLoaded('role')),
+            'roles'     => RoleResource::collection($this->whenLoaded('roles')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

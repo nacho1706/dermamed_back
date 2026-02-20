@@ -19,7 +19,7 @@ class UserController extends Controller
 
         $user = UserFactory::fromRequest($validated);
         $user->save();
-        $user->load('role');
+        $user->load('roles');
 
         $token = JWTAuth::fromUser($user);
 
@@ -44,7 +44,7 @@ class UserController extends Controller
             ], 401);
         }
 
-        $user = User::where('email', $validated['email'])->with('role')->first();
+        $user = User::where('email', $validated['email'])->with('roles')->first();
 
         return response()->json([
             'user'  => new UserResource($user),
@@ -58,7 +58,7 @@ class UserController extends Controller
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
-        $query = User::query()->with('role');
+        $query = User::query()->with('roles');
 
         if (isset($validated['name'])) {
             $query->where('name', 'like', '%' . $validated['name'] . '%');
@@ -69,7 +69,9 @@ class UserController extends Controller
         }
 
         if (isset($validated['role_id'])) {
-            $query->where('role_id', $validated['role_id']);
+            $query->whereHas('roles', function ($q) use ($validated) {
+                $q->where('roles.id', $validated['role_id']);
+            });
         }
 
         if (isset($validated['is_active'])) {
@@ -83,7 +85,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        $user->load('role');
+        $user->load('roles');
 
         return new UserResource($user);
     }
@@ -94,7 +96,12 @@ class UserController extends Controller
 
         $user = UserFactory::fromRequest($validated, $user);
         $user->save();
-        $user->load('role');
+        
+        if (isset($validated['role_ids'])) {
+            $user->roles()->sync($validated['role_ids']);
+        }
+        
+        $user->load('roles');
 
         return new UserResource($user);
     }
@@ -111,7 +118,7 @@ class UserController extends Controller
     public function me()
     {
         $user = auth()->user();
-        $user->load('role');
+        $user->load('roles');
 
         return new UserResource($user);
     }

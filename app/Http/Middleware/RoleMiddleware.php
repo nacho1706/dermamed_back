@@ -26,18 +26,17 @@ class RoleMiddleware
             ], 401);
         }
 
-        // Load role relationship if not already loaded
-        if (! $user->relationLoaded('role')) {
-            $user->load('role');
+        // Load roles relationship if not already loaded
+        if (! $user->relationLoaded('roles')) {
+            $user->load('roles');
         }
 
-        // Admin always has access
-        if ($user->isAdmin()) {
-            return $next($request);
-        }
+        // Check if user has ANY of the allowed roles
+        $hasRole = $user->roles->contains(function ($role) use ($roles) {
+            return in_array($role->name, $roles);
+        });
 
-        // Check if user's role is in the allowed roles
-        if (! in_array($user->role->name, $roles)) {
+        if (! $hasRole) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to access this resource',
