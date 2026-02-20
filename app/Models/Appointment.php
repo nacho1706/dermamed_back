@@ -19,6 +19,9 @@ class Appointment extends Model
         'start_time',
         'end_time',
         'status',
+        'check_in_at',
+        'real_start_at',
+        'real_end_at',
         'reserve_channel',
         'notes',
     ];
@@ -33,7 +36,39 @@ class Appointment extends Model
         return [
             'start_time' => 'datetime',
             'end_time' => 'datetime',
+            'check_in_at' => 'datetime',
+            'real_start_at' => 'datetime',
+            'real_end_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        $handleTimestamps = function (Appointment $appointment) {
+            if ($appointment->status === 'in_waiting_room') {
+                $appointment->check_in_at = $appointment->check_in_at ?? now();
+            } elseif ($appointment->status === 'in_progress') {
+                $appointment->check_in_at = $appointment->check_in_at ?? now();
+                $appointment->real_start_at = $appointment->real_start_at ?? now();
+            } elseif ($appointment->status === 'completed') {
+                $appointment->check_in_at = $appointment->check_in_at ?? now();
+                $appointment->real_start_at = $appointment->real_start_at ?? now();
+                $appointment->real_end_at = $appointment->real_end_at ?? now();
+            }
+        };
+
+        static::updating(function (Appointment $appointment) use ($handleTimestamps) {
+            if ($appointment->isDirty('status')) {
+                $handleTimestamps($appointment);
+            }
+        });
+
+        static::creating(function (Appointment $appointment) use ($handleTimestamps) {
+            $handleTimestamps($appointment);
+        });
     }
 
     /**

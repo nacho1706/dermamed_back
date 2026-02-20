@@ -41,10 +41,9 @@ class StoreAppointmentRequest extends FormRequest
                 ),
             ],
             'end_time' => 'required|date|after:start_time',
-            'status' => 'sometimes|string|in:pending,confirmed,cancelled,attended',
+            'status' => 'sometimes|required|string|in:scheduled,in_waiting_room,in_progress,completed,cancelled,no_show,pending,confirmed',
             'reserve_channel' => 'nullable|string|max:50|in:whatsapp,manual,web',
             'notes' => 'nullable|string',
         ];
     }
 }
-

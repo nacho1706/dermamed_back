@@ -64,7 +64,7 @@ class UpdateAppointmentRequest extends FormRequest
                  }
             ],
             'end_time' => 'sometimes|required|date|after:start_time',
-            'status' => 'sometimes|required|string|in:pending,confirmed,cancelled,attended',
+            'status' => 'sometimes|required|string|in:scheduled,in_waiting_room,in_progress,completed,cancelled,no_show,pending,confirmed',
             'reserve_channel' => 'sometimes|nullable|string|max:50|in:whatsapp,manual,web',
             'notes' => 'sometimes|nullable|string',
         ];

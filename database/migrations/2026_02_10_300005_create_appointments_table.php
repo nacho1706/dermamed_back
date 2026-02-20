@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained('services')->restrictOnDelete();
             $table->dateTime('start_time');
             $table->dateTime('end_time');
-            $table->string('status', 20)->default('pending'); // pending, confirmed, cancelled, attended
+            $table->string('status', 20)->default('scheduled'); // scheduled, in_waiting_room, in_progress, completed, cancelled, no_show
             $table->string('reserve_channel', 50)->nullable(); // whatsapp, manual, web
             $table->text('notes')->nullable();
             $table->timestamps();
