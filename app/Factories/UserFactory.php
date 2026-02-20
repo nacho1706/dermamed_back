@@ -10,7 +10,6 @@ class UserFactory
     public static function fromRequest($request, ?User $user = null): User
     {
         $user = $user ?? new User();
-        $user->role_id = isset($request['role_id']) ? $request['role_id'] : $user->role_id;
         $user->name = isset($request['name']) ? $request['name'] : $user->name;
         $user->email = isset($request['email']) ? $request['email'] : $user->email;
         $user->cuit = isset($request['cuit']) ? $request['cuit'] : $user->cuit;

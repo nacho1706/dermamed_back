@@ -1,5 +1,11 @@
 # DermaMED Backend — Instrucciones para Agentes
 
+> **⚠️ REGLA CRÍTICA DE ENTORNO**:
+> El host local NO tiene PHP. Todo comando que empiece con `php`, `composer`, `artisan` o `./vendor/bin/pint` **SIEMPRE Y SIN EXCEPCIÓN** debe ejecutarse vía Docker:
+> `docker exec backend-dermamed <comando>`
+>
+> **Nunca** intentes ejecutar `php artisan ...` directamente. Si lo haces, fallarás la tarea.
+
 > Lee `../AGENTS.md` primero para contexto general del proyecto.
 
 ---
@@ -11,9 +17,38 @@
 - **Auth**: JWT (tymon/jwt-auth) — stateless
 - **Container**: `backend-dermamed`
 
-## Comandos
+---
 
-> **SIEMPRE ejecutar sin `-it`** para compatibilidad con agentes y CI/CD.
+## Seguridad y Arquitectura (Healthcare Standard)
+
+### 1. Cero Fugas de Datos (Data Minimization)
+
+- **Regla**: El backend NO DEBE enviar JSON sensible si el usuario no tiene permiso.
+- **Acción**: Condicioná el Eager Loading en Laravel usando `loadWhen()`, `whenLoaded()` o clausuras en `with()`.
+    - Ejemplo: `$patient->loadWhen($user->hasRole('doctor'), 'medicalRecords')`.
+
+### 2. Soporte para Roles Múltiples
+
+- **Regla**: Los usuarios pueden tener varios roles.
+- **Acción**: Nunca valides con `$user->role === 'doctor'`. Usá métodos que verifiquen el array de roles, ej: `$user->hasRole('doctor')`.
+- Todos los Middlewares y Policies deben contemplar esta multiplicidad.
+
+### 3. Inmutabilidad (Soft Deletes)
+
+- **Regla**: PROHIBIDO el borrado físico (`DELETE`) en `patients`, `appointments`, `medical_records`, `invoices`.
+- **Acción**: Usar el trait `SoftDeletes` en los Modelos. NUNCA usar `forceDelete()`.
+
+### 4. Default Deny
+
+- Toda nueva ruta en `api.php` debe estar protegida por defecto.
+- Solo exponé datos si el usuario tiene el rol explícito necesario.
+
+---
+
+## Comandos (DOCKER ONLY)
+
+> **PROHIBIDO**: Ejecutar comandos directamente en el host.
+> **SIEMPRE**: Prefijar con `docker exec backend-dermamed`. No usar `-it`.
 
 ```bash
 # Setup inicial

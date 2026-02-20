@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('appointments:send-reminders')->hourly();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         // 404 - Model not found
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
