@@ -52,8 +52,10 @@ return new class extends Migration
             $table->string('address', 255)->nullable()->after('birth_date');
         });
 
-        Schema::table('patients', function (Blueprint $table) {
-            $table->string('cuit', 20)->nullable()->change();
-        });
+        if (Schema::hasColumn('patients', 'cuit')) {
+            Schema::table('patients', function (Blueprint $table) {
+                $table->string('cuit', 20)->nullable()->change();
+            });
+        }
     }
 };

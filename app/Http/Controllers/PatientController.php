@@ -19,6 +19,10 @@ class PatientController extends Controller
 
         $query = Patient::query();
 
+        if (isset($validated['dni'])) {
+            $query->where('dni', $validated['dni']);
+        }
+
         if (isset($validated['first_name'])) {
             $query->where('first_name', 'like', '%' . $validated['first_name'] . '%');
         }
@@ -76,8 +80,12 @@ class PatientController extends Controller
         return new PatientResource($patient);
     }
 
-    public function destroy(Patient $patient)
+    public function destroy(\Illuminate\Http\Request $request, Patient $patient)
     {
+        if (!$request->user()->roles->contains('name', 'clinic_manager')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $patient->delete();
 
         return response()->json([

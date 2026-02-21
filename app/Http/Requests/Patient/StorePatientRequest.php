@@ -14,11 +14,12 @@ class StorePatientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'cuit' => 'nullable|string|digits:11|unique:patients',
-            'email' => 'nullable|string|email|max:255',
-            'phone' => 'nullable|string|max:50',
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'dni' => ['required', 'string', \Illuminate\Validation\Rule::unique('patients', 'dni')],
+            'cuit' => ['nullable', 'string', 'digits:11', \Illuminate\Validation\Rule::unique('patients', 'cuit')],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
             'birth_date' => 'nullable|date',
             'street' => 'nullable|string|max:150',
             'street_number' => 'nullable|string|max:10',
