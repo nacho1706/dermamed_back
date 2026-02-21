@@ -81,7 +81,7 @@ class AppointmentController extends Controller
                 'confirmed' => ['scheduled', 'in_waiting_room', 'cancelled', 'no_show'],
                 'pending' => ['scheduled', 'confirmed', 'cancelled'],
                 'in_waiting_room' => ['in_progress', 'cancelled', 'scheduled'],
-                'in_progress' => ['completed', 'cancelled'],
+                'in_progress' => ['completed', 'cancelled', 'in_waiting_room'],
             ];
 
             // If current status is not in the map, we assume it's a final state (completed, cancelled, no_show)
