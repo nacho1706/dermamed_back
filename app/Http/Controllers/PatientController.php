@@ -38,9 +38,15 @@ class PatientController extends Controller
         if (isset($validated['search'])) {
             $search = $validated['search'];
             $query->where(function($q) use ($search) {
-                $q->where('first_name', 'like', '%' . $search . '%')
-                  ->orWhere('last_name', 'like', '%' . $search . '%')
-                  ->orWhere('cuit', 'like', '%' . $search . '%');
+                if (ctype_digit(str_replace(' ', '', $search))) {
+                    $q->where('dni', 'ilike', '%' . $search . '%')
+                      ->orWhere('phone', 'ilike', '%' . $search . '%');
+                } else {
+                    $q->where('first_name', 'ilike', '%' . $search . '%')
+                      ->orWhere('last_name', 'ilike', '%' . $search . '%')
+                      ->orWhere('dni', 'ilike', '%' . $search . '%')
+                      ->orWhere('phone', 'ilike', '%' . $search . '%');
+                }
             });
         }
 
