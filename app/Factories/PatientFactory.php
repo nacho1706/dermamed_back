@@ -13,6 +13,7 @@ class PatientFactory
         $fields = [
             'first_name',
             'last_name',
+            'dni',
             'cuit',
             'email',
             'phone',
