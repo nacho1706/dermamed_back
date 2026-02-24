@@ -16,8 +16,7 @@ class AppointmentController extends Controller
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
-
-        $query = Appointment::query()->with(['patient', 'doctor', 'service']);
+        $query = Appointment::query()->with(['patient', 'doctor', 'service', 'medicalRecord']);
 
         if (isset($validated['patient_id'])) {
             $query->where('patient_id', $validated['patient_id']);
@@ -36,11 +35,11 @@ class AppointmentController extends Controller
         }
 
         if (isset($validated['date_from'])) {
-            $query->whereDate('start_time', '>=', $validated['date_from']);
+            $query->where('start_time', '>=', $validated['date_from']);
         }
 
         if (isset($validated['date_to'])) {
-            $query->whereDate('start_time', '<=', $validated['date_to']);
+            $query->where('start_time', '<=', $validated['date_to']);
         }
 
         $paginador = $query->orderBy('start_time', 'asc')->paginate($cantidad, ['*'], 'page', $pagina);

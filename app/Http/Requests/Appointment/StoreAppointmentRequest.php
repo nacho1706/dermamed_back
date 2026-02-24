@@ -34,11 +34,16 @@ class StoreAppointmentRequest extends FormRequest
             'start_time' => [
                 'required',
                 'date',
-                new \App\Rules\AppointmentOverlap(
-                    $this->input('doctor_id'),
-                    $this->input('start_time'),
-                    $this->input('end_time')
-                ),
+                function ($attribute, $value, $fail) {
+                    if ($this->input('status') !== 'in_progress') {
+                        $rule = new \App\Rules\AppointmentOverlap(
+                            $this->input('doctor_id'),
+                            $this->input('start_time'),
+                            $this->input('end_time')
+                        );
+                        $rule->validate($attribute, $value, $fail);
+                    }
+                },
             ],
             'end_time' => 'required|date|after:start_time',
             'status' => 'sometimes|required|string|in:scheduled,in_waiting_room,in_progress,completed,cancelled,no_show,pending,confirmed',
