@@ -33,7 +33,7 @@ Route::middleware('auth:api')->group(function () {
     // Users:
     // Clinic Manager: Full management.
     // Receptionist: View only (to see doctors/staff).
-    Route::middleware('role:clinic_manager,receptionist')->group(function () {
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{user}', [UserController::class, 'show']);
     });

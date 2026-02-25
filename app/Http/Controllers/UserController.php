@@ -74,6 +74,12 @@ class UserController extends Controller
             });
         }
 
+        if (isset($validated['role'])) {
+            $query->whereHas('roles', function ($q) use ($validated) {
+                $q->where('roles.name', $validated['role']);
+            });
+        }
+
         if (isset($validated['is_active'])) {
             $query->where('is_active', $validated['is_active']);
         }

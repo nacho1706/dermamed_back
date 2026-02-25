@@ -19,6 +19,7 @@ class IndexUsersRequest extends FormRequest
             'name' => 'sometimes|string',
             'email' => 'sometimes|email',
             'role_id' => 'sometimes|integer|exists:roles,id',
+            'role' => 'sometimes|string|exists:roles,name',
             'is_active' => 'sometimes|boolean',
         ];
     }
