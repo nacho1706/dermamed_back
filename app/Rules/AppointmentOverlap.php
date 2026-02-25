@@ -35,7 +35,7 @@ class AppointmentOverlap implements ValidationRule
 
         $query = Appointment::query()
             ->where('doctor_id', $this->doctorId)
-            ->where('status', '!=', 'cancelled') // Ignore cancelled appointments
+            ->whereNotIn('status', ['cancelled', 'completed', 'no_show']) // Ignore inactive statuses
             ->where(function ($q) {
                 // Check for overlap
                 $q->where(function ($q) {
