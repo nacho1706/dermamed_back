@@ -9,8 +9,8 @@ use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInvitationController;
@@ -57,6 +57,7 @@ Route::middleware('auth:api')->group(function () {
             Route::get('/patients/{patient}', [PatientController::class, 'show']);
         });
         Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
+            Route::post('/patients/import', [PatientController::class, 'import']);
             Route::post('/patients', [PatientController::class, 'store']);
             Route::put('/patients/{patient}', [PatientController::class, 'update']);
             Route::delete('/patients/{patient}', [PatientController::class, 'destroy']);
@@ -70,6 +71,7 @@ Route::middleware('auth:api')->group(function () {
             Route::get('/services/{service}', [ServiceController::class, 'show']);
         });
         Route::middleware('role:clinic_manager')->group(function () {
+            Route::post('/services/import', [ServiceController::class, 'import']);
             Route::post('/services', [ServiceController::class, 'store']);
             Route::put('/services/{service}', [ServiceController::class, 'update']);
             Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
@@ -119,6 +121,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/products/{product}', [ProductController::class, 'show']);
     });
     Route::middleware('role:clinic_manager')->group(function () {
+        Route::post('/products/import', [ProductController::class, 'import']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
@@ -149,9 +152,9 @@ Route::middleware('auth:api')->group(function () {
     // Invoice Itmes & Payments:
     // Follows similar logic.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
-         Route::post('/invoices/{invoice}/payments', [InvoicePaymentController::class, 'store']);
-         Route::get('/invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'show']);
-         Route::apiResource('invoices.items', InvoiceItemController::class)->except(['index']);
+        Route::post('/invoices/{invoice}/payments', [InvoicePaymentController::class, 'store']);
+        Route::get('/invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'show']);
+        Route::apiResource('invoices.items', InvoiceItemController::class)->except(['index']);
     });
     Route::middleware('role:clinic_manager')->group(function () {
         Route::delete('/invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'destroy']);
@@ -162,4 +165,3 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     });
 });
-
