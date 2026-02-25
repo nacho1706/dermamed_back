@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\User\InviteUserRequest;
 use App\Models\User;
 use App\Models\UserInvitation;
 use Illuminate\Http\Request;
@@ -18,15 +19,9 @@ use App\Mail\UserInvitationMail;
 
 class UserInvitationController extends Controller
 {
-    public function invite(Request $request)
+    public function invite(InviteUserRequest $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|email|unique:users,email',
-            'name' => 'required|string|max:255',
-            'role_ids' => 'required|array|min:1',
-            'role_ids.*' => 'exists:roles,id',
-            'specialty' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validated();
 
         // Create user with pending status
         $user = User::create([

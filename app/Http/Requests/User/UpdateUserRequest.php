@@ -8,6 +8,16 @@ class UpdateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        // Capa 2: Backend - Prevención de Escalada de Privilegios
+        // Si el usuario no es system_admin, no puede asignar el rol system_admin.
+        $roleIds = $this->input('role_ids');
+        if ($roleIds) {
+            $systemAdminRole = \App\Models\Role::where('name', 'system_admin')->first();
+            if ($systemAdminRole && in_array($systemAdminRole->id, (array)$roleIds)) {
+                return $this->user()->isSystemAdmin();
+            }
+        }
+
         return true;
     }
 
