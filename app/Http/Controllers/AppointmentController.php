@@ -50,6 +50,18 @@ class AppointmentController extends Controller
     public function store(StoreAppointmentRequest $request)
     {
         $validated = $request->validated();
+        $user = auth()->user();
+
+        // Security: Doctors can only schedule for themselves
+        if ($user->isDoctor() && !$user->isClinicManager() && !$user->isReceptionist()) {
+            if (isset($validated['doctor_id']) && (int)$validated['doctor_id'] !== $user->id) {
+                return response()->json([
+                    'message' => 'No tienes permiso para agendar turnos para otros médicos.'
+                ], 403);
+            }
+            // Ensure they can't bypass by omitting doctor_id (though it's required in request)
+            $validated['doctor_id'] = $user->id;
+        }
 
         $appointment = AppointmentFactory::fromRequest($validated);
         $appointment->save();
@@ -70,6 +82,23 @@ class AppointmentController extends Controller
     public function update(UpdateAppointmentRequest $request, Appointment $appointment)
     {
         $validated = $request->validated();
+        $user = auth()->user();
+
+        // Security: Doctors can only modify their own appointments
+        if ($user->isDoctor() && !$user->isClinicManager() && !$user->isReceptionist()) {
+            if ($appointment->doctor_id !== $user->id) {
+                return response()->json([
+                    'message' => 'No tienes permiso para modificar turnos de otros médicos.'
+                ], 403);
+            }
+
+            // Also prevent reassigning ownership to someone else
+            if (isset($validated['doctor_id']) && (int)$validated['doctor_id'] !== $user->id) {
+                 return response()->json([
+                    'message' => 'No tienes permiso para reasignar este turno a otro médico.'
+                ], 403);
+            }
+        }
 
         // REGLA 1: Congelar estructura si el turno ya es de un día pasado.
         // startOfDay() nos asegura que durante el día actual aún se puedan corregir horarios.
@@ -93,7 +122,7 @@ class AppointmentController extends Controller
             $allowedTransitions = [
                 'scheduled'       => ['in_waiting_room', 'cancelled', 'no_show'],
                 'in_waiting_room' => ['in_progress', 'cancelled', 'no_show'], // Puede irse cansado de esperar
-                'in_progress'     => ['completed', 'cancelled'], // Puede cancelarse si hubo un error
+                'in_progress'     => ['completed', 'cancelled', 'in_waiting_room', 'scheduled'], // Reversiones por error humano
             ];
 
             // Si el estado actual no está en el array, es un estado final (completed, cancelled, no_show)
@@ -113,6 +142,17 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment)
     {
+        $user = auth()->user();
+
+        // Security: Doctors can only delete their own appointments
+        if ($user->isDoctor() && !$user->isClinicManager() && !$user->isReceptionist()) {
+            if ($appointment->doctor_id !== $user->id) {
+                return response()->json([
+                    'message' => 'No tienes permiso para eliminar turnos de otros médicos.'
+                ], 403);
+            }
+        }
+
         $appointment->delete();
 
         return response()->json([
