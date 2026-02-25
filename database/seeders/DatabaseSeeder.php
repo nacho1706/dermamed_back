@@ -16,12 +16,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed lookup tables first
         $this->call([
             RoleSeeder::class,
             PaymentMethodSeeder::class,
             VoucherTypeSeeder::class,
             ServiceSeeder::class,
+            PatientSeeder::class,
+            AppointmentSeeder::class,
         ]);
 
         // Clinic Manager and Doctor
