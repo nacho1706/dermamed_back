@@ -19,10 +19,6 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::table('appointments', function (Blueprint $table) {
-            $table->softDeletes();
-        });
-
         Schema::table('invoices', function (Blueprint $table) {
             $table->softDeletes();
         });
@@ -38,10 +34,6 @@ return new class extends Migration
         });
 
         Schema::table('patients', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
-
-        Schema::table('appointments', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
 

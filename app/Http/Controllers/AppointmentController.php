@@ -71,25 +71,35 @@ class AppointmentController extends Controller
     {
         $validated = $request->validated();
 
+        // REGLA 1: Congelar estructura si el turno ya es de un día pasado.
+        // startOfDay() nos asegura que durante el día actual aún se puedan corregir horarios.
+        if ($appointment->start_time->startOfDay()->isPast() && !$appointment->start_time->isToday()) {
+            $structuralFields = ['patient_id', 'doctor_id', 'service_id', 'start_time', 'end_time'];
+            
+            foreach ($structuralFields as $field) {
+                if (array_key_exists($field, $validated) && $validated[$field] != $appointment->$field) {
+                    return response()->json([
+                        'message' => "No puedes modificar datos médicos u horarios de un turno de días anteriores. Solo puedes actualizar su estado o notas."
+                    ], 422);
+                }
+            }
+        }
+
+        // REGLA 2: Máquina de estados estricta (Sin pending ni confirmed)
         if (isset($validated['status']) && $validated['status'] !== $appointment->status) {
             $currentStatus = $appointment->status;
             $newStatus = $validated['status'];
 
             $allowedTransitions = [
-                'scheduled' => ['in_waiting_room', 'cancelled', 'no_show', 'confirmed', 'pending'],
-                'confirmed' => ['scheduled', 'in_waiting_room', 'cancelled', 'no_show'],
-                'pending' => ['scheduled', 'confirmed', 'cancelled'],
-                'in_waiting_room' => ['in_progress', 'cancelled', 'scheduled'],
-                'in_progress' => ['completed', 'cancelled', 'in_waiting_room'],
+                'scheduled'       => ['in_waiting_room', 'cancelled', 'no_show'],
+                'in_waiting_room' => ['in_progress', 'cancelled', 'no_show'], // Puede irse cansado de esperar
+                'in_progress'     => ['completed', 'cancelled'], // Puede cancelarse si hubo un error
             ];
 
-            // If current status is not in the map, we assume it's a final state (completed, cancelled, no_show)
-            // unless we want to allow some "rollback" for corrections by admins.
-            // For now, let's keep it strict but allow clinic_manager to override? No, strict for now.
-            
-            if (isset($allowedTransitions[$currentStatus]) && !in_array($newStatus, $allowedTransitions[$currentStatus])) {
+            // Si el estado actual no está en el array, es un estado final (completed, cancelled, no_show)
+            if (!isset($allowedTransitions[$currentStatus]) || !in_array($newStatus, $allowedTransitions[$currentStatus])) {
                 return response()->json([
-                    'message' => "La transición de {$currentStatus} a {$newStatus} no está permitida."
+                    'message' => "La transición de estado de '{$currentStatus}' a '{$newStatus}' no está permitida."
                 ], 422);
             }
         }
