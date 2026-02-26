@@ -10,13 +10,13 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'        => $this->id,
-            'name'      => $this->name,
-            'email'     => $this->email,
-            'cuit'      => $this->cuit,
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'cuit' => $this->cuit,
             'specialty' => $this->specialty,
             'is_active' => $this->is_active,
-            'roles'     => RoleResource::collection($this->whenLoaded('roles')),
+            'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

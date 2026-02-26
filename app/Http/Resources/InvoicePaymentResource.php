@@ -10,9 +10,9 @@ class InvoicePaymentResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'             => $this->id,
-            'amount'         => $this->amount,
-            'payment_date'   => $this->payment_date?->format('Y-m-d'),
+            'id' => $this->id,
+            'amount' => $this->amount,
+            'payment_date' => $this->payment_date?->format('Y-m-d'),
             'payment_method' => new PaymentMethodResource($this->whenLoaded('paymentMethod')),
         ];
     }

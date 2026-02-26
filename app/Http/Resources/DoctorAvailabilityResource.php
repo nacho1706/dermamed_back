@@ -10,11 +10,11 @@ class DoctorAvailabilityResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
+            'id' => $this->id,
             'day_of_week' => $this->day_of_week,
-            'start_time'  => $this->start_time,
-            'end_time'    => $this->end_time,
-            'doctor'      => new UserResource($this->whenLoaded('doctor')),
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'doctor' => new UserResource($this->whenLoaded('doctor')),
         ];
     }
 }

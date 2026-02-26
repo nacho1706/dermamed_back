@@ -13,27 +13,27 @@ class StorePatientRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('phone') && !empty($this->input('phone'))) {
+        if ($this->has('phone') && ! empty($this->input('phone'))) {
             $phone = (string) $this->input('phone');
             $digits = preg_replace('/[^0-9]/', '', $phone);
-            
+
             if (str_starts_with($digits, '0')) {
                 $digits = ltrim($digits, '0');
             }
-            
+
             if (strlen($digits) === 10) {
                 // Local 10-digit number (e.g., 1144445555 or 3813193828)
-                $this->merge(['phone' => '+549' . $digits]);
+                $this->merge(['phone' => '+549'.$digits]);
             } elseif (strlen($digits) === 12 && str_starts_with($digits, '54')) {
                 // Number with country code but missing mobile '9' (e.g., 541144445555)
-                $this->merge(['phone' => '+549' . substr($digits, 2)]);
+                $this->merge(['phone' => '+549'.substr($digits, 2)]);
             } elseif (strlen($digits) === 13 && str_starts_with($digits, '549')) {
                 // Perfect Argentinian mobile format
-                $this->merge(['phone' => '+' . $digits]);
-            } elseif (!empty($digits)) {
+                $this->merge(['phone' => '+'.$digits]);
+            } elseif (! empty($digits)) {
                 // Keep the + if it had one (for other countries)
                 $hasPlus = str_starts_with(trim($phone), '+');
-                $this->merge(['phone' => ($hasPlus ? '+' : '') . $digits]);
+                $this->merge(['phone' => ($hasPlus ? '+' : '').$digits]);
             }
         }
     }

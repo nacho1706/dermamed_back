@@ -8,7 +8,7 @@ class StockMovementFactory
 {
     public static function fromRequest($request, ?StockMovement $movement = null): StockMovement
     {
-        $movement = $movement ?? new StockMovement();
+        $movement = $movement ?? new StockMovement;
         $movement->product_id = isset($request['product_id']) ? $request['product_id'] : $movement->product_id;
         $movement->user_id = isset($request['user_id']) ? $request['user_id'] : $movement->user_id;
         $movement->type = isset($request['type']) ? $request['type'] : $movement->type;

@@ -84,23 +84,23 @@ class ProductController extends Controller
             fclose($handle);
 
             return response()->json([
-                'message'        => 'El archivo está vacío o no tiene encabezados.',
+                'message' => 'El archivo está vacío o no tiene encabezados.',
                 'imported_count' => 0,
-                'errors'         => [],
+                'errors' => [],
             ], 422);
         }
 
         $header = array_map(fn ($h) => strtolower(trim($h)), $header);
 
         $requiredColumns = ['name', 'price', 'stock'];
-        $missingColumns  = array_diff($requiredColumns, $header);
+        $missingColumns = array_diff($requiredColumns, $header);
         if (! empty($missingColumns)) {
             fclose($handle);
 
             return response()->json([
-                'message'        => 'Columnas requeridas faltantes: '.implode(', ', $missingColumns),
+                'message' => 'Columnas requeridas faltantes: '.implode(', ', $missingColumns),
                 'imported_count' => 0,
-                'errors'         => [],
+                'errors' => [],
             ], 422);
         }
 
@@ -121,9 +121,9 @@ class ProductController extends Controller
 
         if (empty($rows)) {
             return response()->json([
-                'message'        => 'El archivo no contiene filas de datos.',
+                'message' => 'El archivo no contiene filas de datos.',
                 'imported_count' => 0,
-                'errors'         => [],
+                'errors' => [],
             ], 422);
         }
 
@@ -134,22 +134,22 @@ class ProductController extends Controller
         $messages = [];
         foreach ($rows as $idx => $row) {
             $rowLabel = "Fila {$row['_row']}";
-            $rules["rows.{$idx}.name"]      = 'required|string|max:255';
-            $rules["rows.{$idx}.price"]     = 'required|numeric|min:0';
-            $rules["rows.{$idx}.stock"]     = 'required|integer|min:0';
+            $rules["rows.{$idx}.name"] = 'required|string|max:255';
+            $rules["rows.{$idx}.price"] = 'required|numeric|min:0';
+            $rules["rows.{$idx}.stock"] = 'required|integer|min:0';
             $rules["rows.{$idx}.min_stock"] = 'nullable|integer|min:0';
             $rules["rows.{$idx}.description"] = 'nullable|string|max:255';
 
-            $messages["rows.{$idx}.name.required"]      = "{$rowLabel}: El campo 'name' es requerido.";
-            $messages["rows.{$idx}.name.max"]           = "{$rowLabel}: El nombre no puede superar los 255 caracteres.";
-            $messages["rows.{$idx}.price.required"]     = "{$rowLabel}: El campo 'price' es requerido.";
-            $messages["rows.{$idx}.price.numeric"]      = "{$rowLabel}: El campo 'price' debe ser numérico.";
-            $messages["rows.{$idx}.price.min"]          = "{$rowLabel}: El precio no puede ser negativo.";
-            $messages["rows.{$idx}.stock.required"]     = "{$rowLabel}: El campo 'stock' es requerido.";
-            $messages["rows.{$idx}.stock.integer"]      = "{$rowLabel}: El campo 'stock' debe ser un número entero (sin decimales).";
-            $messages["rows.{$idx}.stock.min"]          = "{$rowLabel}: El stock no puede ser negativo.";
-            $messages["rows.{$idx}.min_stock.integer"]  = "{$rowLabel}: El campo 'min_stock' debe ser un número entero (sin decimales).";
-            $messages["rows.{$idx}.min_stock.min"]      = "{$rowLabel}: El stock mínimo no puede ser negativo.";
+            $messages["rows.{$idx}.name.required"] = "{$rowLabel}: El campo 'name' es requerido.";
+            $messages["rows.{$idx}.name.max"] = "{$rowLabel}: El nombre no puede superar los 255 caracteres.";
+            $messages["rows.{$idx}.price.required"] = "{$rowLabel}: El campo 'price' es requerido.";
+            $messages["rows.{$idx}.price.numeric"] = "{$rowLabel}: El campo 'price' debe ser numérico.";
+            $messages["rows.{$idx}.price.min"] = "{$rowLabel}: El precio no puede ser negativo.";
+            $messages["rows.{$idx}.stock.required"] = "{$rowLabel}: El campo 'stock' es requerido.";
+            $messages["rows.{$idx}.stock.integer"] = "{$rowLabel}: El campo 'stock' debe ser un número entero (sin decimales).";
+            $messages["rows.{$idx}.stock.min"] = "{$rowLabel}: El stock no puede ser negativo.";
+            $messages["rows.{$idx}.min_stock.integer"] = "{$rowLabel}: El campo 'min_stock' debe ser un número entero (sin decimales).";
+            $messages["rows.{$idx}.min_stock.min"] = "{$rowLabel}: El stock mínimo no puede ser negativo.";
         }
 
         // Unique name check across the database
@@ -181,8 +181,8 @@ class ProductController extends Controller
             foreach ($validator->errors()->messages() as $field => $fieldMessages) {
                 preg_match('/^rows\.(\d+)\./', $field, $matches);
                 $rowIndex = isset($matches[1]) ? (int) $matches[1] : null;
-                $rowNum   = $rowIndex !== null ? ($rows[$rowIndex]['_row'] ?? ($rowIndex + 2)) : '?';
-                $column   = preg_replace('/^rows\.\d+\./', '', $field);
+                $rowNum = $rowIndex !== null ? ($rows[$rowIndex]['_row'] ?? ($rowIndex + 2)) : '?';
+                $column = preg_replace('/^rows\.\d+\./', '', $field);
 
                 foreach ($fieldMessages as $msg) {
                     $flatErrors[] = "Fila {$rowNum} ({$column}): {$msg}";
@@ -192,23 +192,23 @@ class ProductController extends Controller
             $errors = array_values(array_unique(array_merge($flatErrors, $inFileDuplicates)));
 
             return response()->json([
-                'message'        => 'Errores de validación',
+                'message' => 'Errores de validación',
                 'imported_count' => 0,
-                'errors'         => $errors,
+                'errors' => $errors,
             ], 422);
         }
 
         // ── 4. All valid → bulk insert inside a transaction ─────────────────
         $insertRows = array_map(fn ($row) => [
-            'name'        => $row['name'],
+            'name' => $row['name'],
             'description' => $row['description'] ?? null,
-            'price'       => (float) $row['price'],
-            'stock'       => (int) $row['stock'],
-            'min_stock'   => isset($row['min_stock']) && ctype_digit(strval($row['min_stock']))
+            'price' => (float) $row['price'],
+            'stock' => (int) $row['stock'],
+            'min_stock' => isset($row['min_stock']) && ctype_digit(strval($row['min_stock']))
                 ? (int) $row['min_stock']
                 : 0,
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ], $rows);
 
         DB::transaction(function () use ($insertRows) {
@@ -218,9 +218,9 @@ class ProductController extends Controller
         $count = count($insertRows);
 
         return response()->json([
-            'message'        => "Importación exitosa: {$count} producto(s) importados correctamente.",
+            'message' => "Importación exitosa: {$count} producto(s) importados correctamente.",
             'imported_count' => $count,
-            'errors'         => [],
+            'errors' => [],
         ]);
     }
 }

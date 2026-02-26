@@ -8,7 +8,7 @@ class PatientFactory
 {
     public static function fromRequest($request, ?Patient $patient = null): Patient
     {
-        $patient = $patient ?? new Patient();
+        $patient = $patient ?? new Patient;
 
         $fields = [
             'first_name',

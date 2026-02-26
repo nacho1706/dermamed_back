@@ -3,19 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\User\InviteUserRequest;
+use App\Http\Resources\UserResource;
+use App\Mail\UserInvitationMail;
 use App\Models\User;
 use App\Models\UserInvitation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use App\Http\Resources\UserResource;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
-
 use Illuminate\Support\Facades\Mail;
-use App\Mail\UserInvitationMail;
+use Illuminate\Support\Str;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserInvitationController extends Controller
 {
@@ -44,7 +41,7 @@ class UserInvitationController extends Controller
         ]);
 
         $this->sendInvitationEmail($user, $token);
-        
+
         Log::info("Invitation token for {$user->email}: {$token}");
 
         return response()->json([
@@ -83,7 +80,7 @@ class UserInvitationController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$invitation) {
+        if (! $invitation) {
             return response()->json(['message' => 'Invalid or expired token'], 404);
         }
 
@@ -101,7 +98,7 @@ class UserInvitationController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$invitation) {
+        if (! $invitation) {
             return response()->json(['message' => 'Invalid or expired token'], 404);
         }
 
@@ -131,8 +128,7 @@ class UserInvitationController extends Controller
         try {
             Mail::to($user->email)->send(new UserInvitationMail($user, $token));
         } catch (\Exception $e) {
-            Log::error('Error sending invitation email via Laravel Mail: ' . $e->getMessage());
+            Log::error('Error sending invitation email via Laravel Mail: '.$e->getMessage());
         }
     }
 }
-

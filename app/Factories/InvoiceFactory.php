@@ -8,7 +8,7 @@ class InvoiceFactory
 {
     public static function fromRequest($request, ?Invoice $invoice = null): Invoice
     {
-        $invoice = $invoice ?? new Invoice();
+        $invoice = $invoice ?? new Invoice;
         $invoice->patient_id = isset($request['patient_id']) ? $request['patient_id'] : $invoice->patient_id;
         $invoice->voucher_type_id = isset($request['voucher_type_id']) ? $request['voucher_type_id'] : $invoice->voucher_type_id;
         $invoice->date = isset($request['date']) ? $request['date'] : $invoice->date;

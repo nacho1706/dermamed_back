@@ -10,13 +10,13 @@ class InvoiceItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
+            'id' => $this->id,
             'description' => $this->description,
-            'quantity'    => $this->quantity,
-            'unit_price'  => $this->unit_price,
-            'subtotal'    => $this->subtotal,
-            'product'     => new ProductResource($this->whenLoaded('product')),
-            'service'     => new ServiceResource($this->whenLoaded('service')),
+            'quantity' => $this->quantity,
+            'unit_price' => $this->unit_price,
+            'subtotal' => $this->subtotal,
+            'product' => new ProductResource($this->whenLoaded('product')),
+            'service' => new ServiceResource($this->whenLoaded('service')),
         ];
     }
 }

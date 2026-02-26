@@ -8,7 +8,7 @@ class ProductFactory
 {
     public static function fromRequest($request, ?Product $product = null): Product
     {
-        $product = $product ?? new Product();
+        $product = $product ?? new Product;
         $product->name = isset($request['name']) ? $request['name'] : $product->name;
         $product->description = isset($request['description']) ? $request['description'] : $product->description;
         $product->price = isset($request['price']) ? $request['price'] : $product->price;

@@ -8,7 +8,7 @@ class ServiceFactory
 {
     public static function fromRequest($request, ?Service $service = null): Service
     {
-        $service = $service ?? new Service();
+        $service = $service ?? new Service;
         $service->name = isset($request['name']) ? $request['name'] : $service->name;
         $service->description = isset($request['description']) ? $request['description'] : $service->description;
         $service->price = isset($request['price']) ? $request['price'] : $service->price;

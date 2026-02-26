@@ -7,7 +7,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class UserInvitationMail extends Mailable
@@ -15,7 +14,9 @@ class UserInvitationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
+
     public $token;
+
     public $setupUrl;
 
     /**
@@ -25,7 +26,7 @@ class UserInvitationMail extends Mailable
     {
         $this->user = $user;
         $this->token = $token;
-        $this->setupUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')) . "/setup-password?token={$token}";
+        $this->setupUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000'))."/setup-password?token={$token}";
     }
 
     /**

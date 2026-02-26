@@ -8,7 +8,7 @@ class InvoiceItemFactory
 {
     public static function fromRequest($request, ?InvoiceItem $item = null): InvoiceItem
     {
-        $item = $item ?? new InvoiceItem();
+        $item = $item ?? new InvoiceItem;
         $item->invoice_id = isset($request['invoice_id']) ? $request['invoice_id'] : $item->invoice_id;
         $item->product_id = isset($request['product_id']) ? $request['product_id'] : $item->product_id;
         $item->service_id = isset($request['service_id']) ? $request['service_id'] : $item->service_id;

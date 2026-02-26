@@ -24,7 +24,7 @@ class UserController extends Controller
         $token = JWTAuth::fromUser($user);
 
         return response()->json([
-            'user'  => new UserResource($user),
+            'user' => new UserResource($user),
             'token' => $token,
         ], 201);
     }
@@ -34,7 +34,7 @@ class UserController extends Controller
         $validated = $request->validated();
 
         $credentials = [
-            'email'    => $validated['email'],
+            'email' => $validated['email'],
             'password' => $validated['password'],
         ];
 
@@ -47,7 +47,7 @@ class UserController extends Controller
         $user = User::where('email', $validated['email'])->with('roles')->first();
 
         return response()->json([
-            'user'  => new UserResource($user),
+            'user' => new UserResource($user),
             'token' => $token,
         ]);
     }
@@ -61,11 +61,11 @@ class UserController extends Controller
         $query = User::query()->with('roles');
 
         if (isset($validated['name'])) {
-            $query->where('name', 'like', '%' . $validated['name'] . '%');
+            $query->where('name', 'like', '%'.$validated['name'].'%');
         }
 
         if (isset($validated['email'])) {
-            $query->where('email', 'like', '%' . $validated['email'] . '%');
+            $query->where('email', 'like', '%'.$validated['email'].'%');
         }
 
         if (isset($validated['role_id'])) {
@@ -102,11 +102,11 @@ class UserController extends Controller
 
         $user = UserFactory::fromRequest($validated, $user);
         $user->save();
-        
+
         if (isset($validated['role_ids'])) {
             $user->roles()->sync($validated['role_ids']);
         }
-        
+
         $user->load('roles');
 
         return new UserResource($user);
