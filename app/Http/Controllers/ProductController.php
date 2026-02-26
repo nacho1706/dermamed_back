@@ -10,6 +10,7 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -69,88 +70,157 @@ class ProductController extends Controller
     public function import(ImportProductRequest $request)
     {
         $file = $request->file('file');
-        $handle = fopen($file->getRealPath(), 'r');
+        $path = $file->getRealPath();
 
-        // Read header row
-        $header = fgetcsv($handle);
+        // ── 0. Detect CSV delimiter (Latin Excel uses ; instead of ,) ────────
+        $firstLine = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)[0] ?? '';
+        $delimiter = substr_count($firstLine, ';') >= substr_count($firstLine, ',') ? ';' : ',';
+
+        $handle = fopen($path, 'r');
+
+        // ── 1. Read & validate header ────────────────────────────────────────
+        $header = fgetcsv($handle, 0, $delimiter);
         if ($header === false) {
             fclose($handle);
 
             return response()->json([
-                'message' => 'El archivo está vacío o no tiene encabezados.',
+                'message'        => 'El archivo está vacío o no tiene encabezados.',
                 'imported_count' => 0,
-                'errors' => [],
+                'errors'         => [],
             ], 422);
         }
 
-        // Normalize header names (trim + lowercase)
         $header = array_map(fn ($h) => strtolower(trim($h)), $header);
 
         $requiredColumns = ['name', 'price', 'stock'];
-        $missingColumns = array_diff($requiredColumns, $header);
+        $missingColumns  = array_diff($requiredColumns, $header);
         if (! empty($missingColumns)) {
             fclose($handle);
 
             return response()->json([
-                'message' => 'Columnas requeridas faltantes: '.implode(', ', $missingColumns),
+                'message'        => 'Columnas requeridas faltantes: '.implode(', ', $missingColumns),
                 'imported_count' => 0,
-                'errors' => [],
+                'errors'         => [],
             ], 422);
         }
 
-        $imported = 0;
-        $errors = [];
+        // ── 2. Read ALL rows into memory (no DB writes yet) ──────────────────
+        $rows = [];
         $rowNumber = 1;
-
-        DB::transaction(function () use ($handle, $header, &$imported, &$errors, &$rowNumber) {
-            while (($row = fgetcsv($handle)) !== false) {
-                $rowNumber++;
-
-                if (count($row) !== count($header)) {
-                    $errors[] = "Fila {$rowNumber}: número de columnas incorrecto.";
-
-                    continue;
-                }
-
-                $data = array_combine($header, $row);
-
-                // Validate required fields
-                if (empty(trim($data['name'] ?? ''))) {
-                    $errors[] = "Fila {$rowNumber}: el campo 'name' es obligatorio.";
-
-                    continue;
-                }
-                if (! is_numeric($data['price'] ?? '')) {
-                    $errors[] = "Fila {$rowNumber}: el campo 'price' debe ser numérico.";
-
-                    continue;
-                }
-                if (! ctype_digit(strval($data['stock'] ?? ''))) {
-                    $errors[] = "Fila {$rowNumber}: el campo 'stock' debe ser un número entero.";
-
-                    continue;
-                }
-
-                Product::updateOrCreate(
-                    ['name' => trim($data['name'])],
-                    [
-                        'description' => trim($data['description'] ?? '') ?: null,
-                        'price' => (float) $data['price'],
-                        'stock' => (int) $data['stock'],
-                        'min_stock' => ctype_digit(strval($data['min_stock'] ?? '')) ? (int) $data['min_stock'] : 0,
-                    ]
-                );
-
-                $imported++;
+        while (($rawRow = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $rowNumber++;
+            if (array_filter($rawRow, fn ($v) => trim($v) !== '') === []) {
+                continue; // skip blank lines
             }
-        });
-
+            $data = array_combine($header, array_pad($rawRow, count($header), ''));
+            $data = array_map(fn ($v) => trim($v) === '' ? null : trim($v), $data);
+            $data['_row'] = $rowNumber;
+            $rows[] = $data;
+        }
         fclose($handle);
 
+        if (empty($rows)) {
+            return response()->json([
+                'message'        => 'El archivo no contiene filas de datos.',
+                'imported_count' => 0,
+                'errors'         => [],
+            ], 422);
+        }
+
+        // ── 3. Build validation payload ─────────────────────────────────────
+        $payload = ['rows' => $rows];
+
+        $rules = [];
+        $messages = [];
+        foreach ($rows as $idx => $row) {
+            $rowLabel = "Fila {$row['_row']}";
+            $rules["rows.{$idx}.name"]      = 'required|string|max:255';
+            $rules["rows.{$idx}.price"]     = 'required|numeric|min:0';
+            $rules["rows.{$idx}.stock"]     = 'required|integer|min:0';
+            $rules["rows.{$idx}.min_stock"] = 'nullable|integer|min:0';
+            $rules["rows.{$idx}.description"] = 'nullable|string|max:255';
+
+            $messages["rows.{$idx}.name.required"]      = "{$rowLabel}: El campo 'name' es requerido.";
+            $messages["rows.{$idx}.name.max"]           = "{$rowLabel}: El nombre no puede superar los 255 caracteres.";
+            $messages["rows.{$idx}.price.required"]     = "{$rowLabel}: El campo 'price' es requerido.";
+            $messages["rows.{$idx}.price.numeric"]      = "{$rowLabel}: El campo 'price' debe ser numérico.";
+            $messages["rows.{$idx}.price.min"]          = "{$rowLabel}: El precio no puede ser negativo.";
+            $messages["rows.{$idx}.stock.required"]     = "{$rowLabel}: El campo 'stock' es requerido.";
+            $messages["rows.{$idx}.stock.integer"]      = "{$rowLabel}: El campo 'stock' debe ser un número entero (sin decimales).";
+            $messages["rows.{$idx}.stock.min"]          = "{$rowLabel}: El stock no puede ser negativo.";
+            $messages["rows.{$idx}.min_stock.integer"]  = "{$rowLabel}: El campo 'min_stock' debe ser un número entero (sin decimales).";
+            $messages["rows.{$idx}.min_stock.min"]      = "{$rowLabel}: El stock mínimo no puede ser negativo.";
+        }
+
+        // Unique name check across the database
+        foreach ($rows as $idx => $row) {
+            $name = $row['name'] ?? null;
+            if ($name !== null) {
+                $rules["rows.{$idx}.name"] .= '|unique:products,name';
+                $messages["rows.{$idx}.name.unique"] = "Fila {$row['_row']}: El nombre '{$name}' ya está registrado en la base de datos.";
+            }
+        }
+
+        $validator = Validator::make($payload, $rules, $messages);
+
+        // Also check for duplicates within the file itself
+        $nameCounts = array_count_values(
+            array_filter(array_column($rows, 'name'), fn ($n) => $n !== null)
+        );
+        $inFileDuplicates = [];
+        foreach ($rows as $row) {
+            $name = $row['name'] ?? null;
+            if ($name !== null && ($nameCounts[$name] ?? 0) > 1) {
+                $inFileDuplicates[] = "Fila {$row['_row']}: El nombre '{$name}' está duplicado dentro del archivo.";
+            }
+        }
+
+        if ($validator->fails() || ! empty($inFileDuplicates)) {
+            $flatErrors = [];
+
+            foreach ($validator->errors()->messages() as $field => $fieldMessages) {
+                preg_match('/^rows\.(\d+)\./', $field, $matches);
+                $rowIndex = isset($matches[1]) ? (int) $matches[1] : null;
+                $rowNum   = $rowIndex !== null ? ($rows[$rowIndex]['_row'] ?? ($rowIndex + 2)) : '?';
+                $column   = preg_replace('/^rows\.\d+\./', '', $field);
+
+                foreach ($fieldMessages as $msg) {
+                    $flatErrors[] = "Fila {$rowNum} ({$column}): {$msg}";
+                }
+            }
+
+            $errors = array_values(array_unique(array_merge($flatErrors, $inFileDuplicates)));
+
+            return response()->json([
+                'message'        => 'Errores de validación',
+                'imported_count' => 0,
+                'errors'         => $errors,
+            ], 422);
+        }
+
+        // ── 4. All valid → bulk insert inside a transaction ─────────────────
+        $insertRows = array_map(fn ($row) => [
+            'name'        => $row['name'],
+            'description' => $row['description'] ?? null,
+            'price'       => (float) $row['price'],
+            'stock'       => (int) $row['stock'],
+            'min_stock'   => isset($row['min_stock']) && ctype_digit(strval($row['min_stock']))
+                ? (int) $row['min_stock']
+                : 0,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ], $rows);
+
+        DB::transaction(function () use ($insertRows) {
+            DB::table('products')->insert($insertRows);
+        });
+
+        $count = count($insertRows);
+
         return response()->json([
-            'message' => "Importación completada: {$imported} registro(s) procesados.",
-            'imported_count' => $imported,
-            'errors' => $errors,
+            'message'        => "Importación exitosa: {$count} producto(s) importados correctamente.",
+            'imported_count' => $count,
+            'errors'         => [],
         ]);
     }
 }
