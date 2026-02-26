@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('status', 20)->default('pending'); // pending, paid, cancelled
             $table->string('cae', 100)->nullable(); // Future AFIP integration
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
