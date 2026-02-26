@@ -35,14 +35,14 @@ class AppointmentController extends Controller
         }
 
         if (isset($validated['date_from'])) {
-            $query->where('start_time', '>=', $validated['date_from']);
+            $query->where('scheduled_start_at', '>=', $validated['date_from']);
         }
 
         if (isset($validated['date_to'])) {
-            $query->where('start_time', '<=', $validated['date_to']);
+            $query->where('scheduled_start_at', '<=', $validated['date_to']);
         }
 
-        $paginador = $query->orderBy('start_time', 'asc')->paginate($cantidad, ['*'], 'page', $pagina);
+        $paginador = $query->orderBy('scheduled_start_at', 'asc')->paginate($cantidad, ['*'], 'page', $pagina);
 
         return AppointmentResource::collection($paginador);
     }
@@ -102,8 +102,8 @@ class AppointmentController extends Controller
 
         // REGLA 1: Congelar estructura si el turno ya es de un día pasado.
         // startOfDay() nos asegura que durante el día actual aún se puedan corregir horarios.
-        if ($appointment->start_time->startOfDay()->isPast() && !$appointment->start_time->isToday()) {
-            $structuralFields = ['patient_id', 'doctor_id', 'service_id', 'start_time', 'end_time'];
+        if ($appointment->scheduled_start_at->startOfDay()->isPast() && !$appointment->scheduled_start_at->isToday()) {
+            $structuralFields = ['patient_id', 'doctor_id', 'service_id', 'scheduled_start_at', 'scheduled_end_at'];
             
             foreach ($structuralFields as $field) {
                 if (array_key_exists($field, $validated) && $validated[$field] != $appointment->$field) {
