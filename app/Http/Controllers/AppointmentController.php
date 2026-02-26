@@ -120,8 +120,8 @@ class AppointmentController extends Controller
             $newStatus = $validated['status'];
 
             $allowedTransitions = [
-                'scheduled'       => ['in_waiting_room', 'cancelled', 'no_show'],
-                'in_waiting_room' => ['in_progress', 'cancelled', 'no_show'], // Puede irse cansado de esperar
+                'scheduled'       => ['in_waiting_room', 'in_progress', 'cancelled', 'no_show'],
+                'in_waiting_room' => ['in_progress', 'cancelled', 'no_show', 'scheduled'], // Puede irse cansado de esperar + reversión por ingreso accidental
                 'in_progress'     => ['completed', 'cancelled', 'in_waiting_room', 'scheduled'], // Reversiones por error humano
             ];
 
@@ -131,6 +131,15 @@ class AppointmentController extends Controller
                     'message' => "La transición de estado de '{$currentStatus}' a '{$newStatus}' no está permitida."
                 ], 422);
             }
+        }
+
+        // REGLA 3: Limpieza de métricas al deshacer ingreso a sala de espera
+        if (
+            isset($validated['status'])
+            && $appointment->status === 'in_waiting_room'
+            && $validated['status'] === 'scheduled'
+        ) {
+            $appointment->check_in_at = null;
         }
 
         $appointment = AppointmentFactory::fromRequest($validated, $appointment);
