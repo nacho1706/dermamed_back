@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DoctorAvailabilityController;
 use App\Http\Controllers\InvoiceController;
@@ -30,13 +29,13 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [UserController::class, 'logout']);
     Route::post('/refresh', [UserController::class, 'refresh']);
 
-    // Users:
-    // Clinic Manager: Full management.
-    // Receptionist: View only (to see doctors/staff).
+    // ── Users (Centralized Management: clinic_manager only) ─────────────
+    // Read access: clinic_manager, receptionist, doctor (to see staff/doctors).
     Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{user}', [UserController::class, 'show']);
     });
+    // Write access: clinic_manager only (invite, update, delete).
     Route::middleware('role:clinic_manager')->group(function () {
         Route::post('/users/invite', [UserInvitationController::class, 'invite']);
         Route::post('/users/{user}/resend-invite', [UserInvitationController::class, 'resend']);
@@ -44,64 +43,54 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
     });
 
-    // ── PHI-Protected Routes (deny_system_admin) ────────────────────────────
-    // Defense-in-depth: system_admin is already excluded by the role whitelist,
-    // but this middleware provides an explicit deny with a clear privacy message.
-    Route::middleware('deny_system_admin')->group(function () {
+    // ── Patients ────────────────────────────────────────────────────────
+    // View: Clinic Manager, Doctor, Receptionist.
+    // Create/Update/Delete: Clinic Manager, Receptionist, Doctor.
+    Route::middleware('role:clinic_manager,doctor,receptionist')->group(function () {
+        Route::get('/patients', [PatientController::class, 'index']);
+        Route::get('/patients/{patient}', [PatientController::class, 'show']);
+    });
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
+        Route::post('/patients/import', [PatientController::class, 'import']);
+        Route::post('/patients', [PatientController::class, 'store']);
+        Route::put('/patients/{patient}', [PatientController::class, 'update']);
+        Route::delete('/patients/{patient}', [PatientController::class, 'destroy']);
+    });
 
-        // Patients:
-        // Clinic Manager, Doctor, Receptionist: View.
-        // Receptionist: Create/Update (Demographics).
-        Route::middleware('role:clinic_manager,doctor,receptionist')->group(function () {
-            Route::get('/patients', [PatientController::class, 'index']);
-            Route::get('/patients/{patient}', [PatientController::class, 'show']);
-        });
-        Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
-            Route::post('/patients/import', [PatientController::class, 'import']);
-            Route::post('/patients', [PatientController::class, 'store']);
-            Route::put('/patients/{patient}', [PatientController::class, 'update']);
-            Route::delete('/patients/{patient}', [PatientController::class, 'destroy']);
-        });
+    // ── Services ────────────────────────────────────────────────────────
+    // View: Clinic Manager, Receptionist, Doctor.
+    // Manage: Clinic Manager.
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
+        Route::get('/services', [ServiceController::class, 'index']);
+        Route::get('/services/{service}', [ServiceController::class, 'show']);
+    });
+    Route::middleware('role:clinic_manager')->group(function () {
+        Route::post('/services/import', [ServiceController::class, 'import']);
+        Route::post('/services', [ServiceController::class, 'store']);
+        Route::put('/services/{service}', [ServiceController::class, 'update']);
+        Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+    });
 
-        // Services:
-        // Clinic Manager, Receptionist, Doctor: View.
-        // Clinic Manager: Manage (Create/Edit/Delete).
-        Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
-            Route::get('/services', [ServiceController::class, 'index']);
-            Route::get('/services/{service}', [ServiceController::class, 'show']);
-        });
-        Route::middleware('role:clinic_manager')->group(function () {
-            Route::post('/services/import', [ServiceController::class, 'import']);
-            Route::post('/services', [ServiceController::class, 'store']);
-            Route::put('/services/{service}', [ServiceController::class, 'update']);
-            Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
-        });
+    // ── Appointments ────────────────────────────────────────────────────
+    // View: Clinic Manager, Receptionist, Doctor.
+    // Create/Update/Delete: Receptionist, Doctor.
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
+        Route::get('/appointments', [AppointmentController::class, 'index']);
+        Route::get('/appointments/{appointment}', [AppointmentController::class, 'show']);
+    });
+    Route::middleware('role:receptionist,doctor')->group(function () {
+        Route::put('/appointments/{appointment}', [AppointmentController::class, 'update']);
+        Route::post('/appointments', [AppointmentController::class, 'store']);
+        Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy']);
+    });
 
-        // Appointments:
-        // Clinic Manager, Receptionist, Doctor: View.
-        // Receptionist: Create/Delete.
-        // Receptionist, Doctor: Update (Status/Notes).
-        Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
-            Route::get('/appointments', [AppointmentController::class, 'index']);
-            Route::get('/appointments/{appointment}', [AppointmentController::class, 'show']);
-        });
-        Route::middleware('role:receptionist,doctor')->group(function () {
-            Route::put('/appointments/{appointment}', [AppointmentController::class, 'update']);
-            Route::post('/appointments', [AppointmentController::class, 'store']);
-            Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy']);
-        });
+    // ── Medical Records (Doctor ONLY) ───────────────────────────────────
+    Route::middleware('role:doctor')->group(function () {
+        Route::apiResource('medical-records', MedicalRecordController::class);
+    });
 
-        // Medical Records:
-        // Doctor ONLY.
-        // Blocked for System Admin, Clinic Manager, Receptionist.
-        Route::middleware('role:doctor')->group(function () {
-            Route::apiResource('medical-records', MedicalRecordController::class);
-        });
-
-    }); // End PHI-Protected Routes
-
-    // Doctor Availabilities:
-    // View: All (except SysAdmin who doesn't care).
+    // ── Doctor Availabilities ───────────────────────────────────────────
+    // View: Clinic Manager, Receptionist, Doctor.
     // Manage: Doctor (own), Receptionist.
     Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::get('/doctor-availabilities', [DoctorAvailabilityController::class, 'index']);
@@ -113,7 +102,7 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/doctor-availabilities/{doctor_availability}', [DoctorAvailabilityController::class, 'destroy']);
     });
 
-    // Products:
+    // ── Products ────────────────────────────────────────────────────────
     // View: Clinic Manager, Receptionist.
     // Manage: Clinic Manager.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
@@ -127,13 +116,13 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     });
 
-    // Stock Movements:
+    // ── Stock Movements ─────────────────────────────────────────────────
     // View/Create: Clinic Manager, Receptionist.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::apiResource('stock-movements', StockMovementController::class)->only(['index', 'store', 'show']);
     });
 
-    // Invoices:
+    // ── Invoices ────────────────────────────────────────────────────────
     // View: Clinic Manager, Receptionist.
     // Create: Receptionist (POS).
     // Manage (Update/Delete): Clinic Manager.
@@ -149,8 +138,7 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy']);
     });
 
-    // Invoice Itmes & Payments:
-    // Follows similar logic.
+    // ── Invoice Items & Payments ────────────────────────────────────────
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::post('/invoices/{invoice}/payments', [InvoicePaymentController::class, 'store']);
         Route::get('/invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'show']);
@@ -158,10 +146,5 @@ Route::middleware('auth:api')->group(function () {
     });
     Route::middleware('role:clinic_manager')->group(function () {
         Route::delete('/invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'destroy']);
-    });
-
-    // ── System Admin Only: Technical/Config routes ──────────────────────────
-    Route::middleware('role:system_admin')->group(function () {
-        Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     });
 });

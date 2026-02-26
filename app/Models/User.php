@@ -104,14 +104,6 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Check if the user is a System Admin.
-     */
-    public function isSystemAdmin(): bool
-    {
-        return $this->hasRole('system_admin');
-    }
-
-    /**
      * Check if the user is a Clinic Manager.
      */
     public function isClinicManager(): bool

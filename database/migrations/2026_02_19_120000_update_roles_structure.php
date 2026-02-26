@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -12,13 +10,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Rename existing 'admin' role to 'system_admin' to preserve user associations
+        // 1. Rename existing 'admin' role to 'clinic_manager' to preserve user associations
         DB::table('roles')
             ->where('name', 'admin')
-            ->update(['name' => 'system_admin']);
+            ->update(['name' => 'clinic_manager']);
 
-        // 2. Ensure all 4 required roles exist
-        $roles = ['system_admin', 'clinic_manager', 'doctor', 'receptionist'];
+        // 2. Ensure all 3 required roles exist
+        $roles = ['clinic_manager', 'doctor', 'receptionist'];
 
         foreach ($roles as $roleName) {
             if (!DB::table('roles')->where('name', $roleName)->exists()) {
@@ -34,9 +32,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert 'system_admin' to 'admin'
+        // Revert 'clinic_manager' to 'admin'
         DB::table('roles')
-            ->where('name', 'system_admin')
+            ->where('name', 'clinic_manager')
             ->update(['name' => 'admin']);
     }
 };
