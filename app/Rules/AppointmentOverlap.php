@@ -10,8 +10,11 @@ use Illuminate\Support\Carbon;
 class AppointmentOverlap implements ValidationRule
 {
     protected $doctorId;
+
     protected $startTime;
+
     protected $endTime;
+
     protected $ignoreAppointmentId;
 
     public function __construct($doctorId, $startTime, $endTime, $ignoreAppointmentId = null)
@@ -29,7 +32,7 @@ class AppointmentOverlap implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->doctorId || !$this->startTime || !$this->endTime) {
+        if (! $this->doctorId || ! $this->startTime || ! $this->endTime) {
             return; // Other validation rules will catch missing fields
         }
 
@@ -40,8 +43,8 @@ class AppointmentOverlap implements ValidationRule
                 // Check for overlap
                 $q->where(function ($q) {
                     // New start inside existing key
-                    $q->where('start_time', '<', $this->endTime)
-                      ->where('end_time', '>', $this->startTime);
+                    $q->where('scheduled_start_at', '<', $this->endTime)
+                        ->where('scheduled_end_at', '>', $this->startTime);
                 });
             });
 

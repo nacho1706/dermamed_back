@@ -16,8 +16,8 @@ class Appointment extends Model
         'patient_id',
         'doctor_id',
         'service_id',
-        'start_time',
-        'end_time',
+        'scheduled_start_at',
+        'scheduled_end_at',
         'status',
         'check_in_at',
         'real_start_at',
@@ -34,8 +34,8 @@ class Appointment extends Model
     protected function casts(): array
     {
         return [
-            'start_time' => 'datetime',
-            'end_time' => 'datetime',
+            'scheduled_start_at' => 'datetime',
+            'scheduled_end_at' => 'datetime',
             'check_in_at' => 'datetime',
             'real_start_at' => 'datetime',
             'real_end_at' => 'datetime',

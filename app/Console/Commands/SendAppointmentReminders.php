@@ -29,26 +29,26 @@ class SendAppointmentReminders extends Command
     public function handle()
     {
         $tomorrow = Carbon::tomorrow();
-        
+
         $appointments = Appointment::where('status', 'scheduled')
-            ->whereDate('start_time', $tomorrow)
+            ->whereDate('scheduled_start_at', $tomorrow)
             ->with(['patient', 'doctor'])
             ->get();
-            
+
         $this->info("Found {$appointments->count()} appointments for tomorrow.");
-        
+
         foreach ($appointments as $appointment) {
             // Mocking WhatsApp Notification
             $patientName = $appointment->patient->full_name;
             $doctorName = $appointment->doctor->name;
-            $time = $appointment->start_time->format('H:i');
+            $time = $appointment->scheduled_start_at->format('H:i');
             $phone = $appointment->patient->phone;
-            
+
             Log::info("MOCK WHATSAPP REMINDER to {$phone}: Hola {$patientName}, te recordamos tu turno de mañana con el Dr. {$doctorName} a las {$time}.");
-            
+
             $this->comment("Reminder processed for: {$patientName}");
         }
-        
+
         $this->info('Reminders processed (Mocked).');
     }
 }

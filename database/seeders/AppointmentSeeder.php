@@ -17,12 +17,12 @@ class AppointmentSeeder extends Seeder
     public function run(): void
     {
         $patient = Patient::first();
-        $doctor = User::whereHas('roles', function($q) {
+        $doctor = User::whereHas('roles', function ($q) {
             $q->where('name', 'doctor');
         })->first();
         $service = Service::first();
 
-        if (!$patient || !$doctor || !$service) {
+        if (! $patient || ! $doctor || ! $service) {
             return;
         }
 
@@ -31,8 +31,8 @@ class AppointmentSeeder extends Seeder
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
             'service_id' => $service->id,
-            'start_time' => Carbon::yesterday()->setHour(10),
-            'end_time' => Carbon::yesterday()->setHour(11),
+            'scheduled_start_at' => Carbon::yesterday()->setHour(10),
+            'scheduled_end_at' => Carbon::yesterday()->setHour(11),
             'status' => 'completed',
             'reserve_channel' => 'manual',
             'notes' => 'Turno pasado para prueba de congelamiento',
@@ -46,8 +46,8 @@ class AppointmentSeeder extends Seeder
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
             'service_id' => $service->id,
-            'start_time' => Carbon::tomorrow()->setHour(10),
-            'end_time' => Carbon::tomorrow()->setHour(11),
+            'scheduled_start_at' => Carbon::tomorrow()->setHour(10),
+            'scheduled_end_at' => Carbon::tomorrow()->setHour(11),
             'status' => 'scheduled',
             'reserve_channel' => 'whatsapp',
             'notes' => 'Turno futuro para prueba de estados',
