@@ -123,6 +123,8 @@ class AppointmentController extends Controller
                 'scheduled'       => ['in_waiting_room', 'in_progress', 'cancelled', 'no_show'],
                 'in_waiting_room' => ['in_progress', 'cancelled', 'no_show', 'scheduled'], // Puede irse cansado de esperar + reversión por ingreso accidental
                 'in_progress'     => ['completed', 'cancelled', 'in_waiting_room', 'scheduled'], // Reversiones por error humano
+                'no_show'         => ['in_waiting_room', 'scheduled'], // El paciente llegó tarde o reversión.
+                'cancelled'       => ['scheduled'] // Restaurar turno cancelado
             ];
 
             // Si el estado actual no está en el array, es un estado final (completed, cancelled, no_show)
@@ -136,7 +138,7 @@ class AppointmentController extends Controller
         // REGLA 3: Limpieza de métricas al deshacer ingreso a sala de espera
         if (
             isset($validated['status'])
-            && $appointment->status === 'in_waiting_room'
+            && in_array($appointment->status, ['in_waiting_room', 'no_show'])
             && $validated['status'] === 'scheduled'
         ) {
             $appointment->check_in_at = null;

@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Models\Appointment;
+use Carbon\Carbon;
 
 class MarkNoShowAppointments extends Command
 {
@@ -18,13 +20,17 @@ class MarkNoShowAppointments extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Marks scheduled appointments that have passed their start time as no_show.';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        //
+        $count = Appointment::where('status', 'scheduled')
+            ->where('scheduled_start_at', '<=', now())
+            ->update(['status' => 'no_show']);
+
+        $this->info("Successfully marked {$count} passed appointments as no_show.");
     }
 }
