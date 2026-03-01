@@ -18,7 +18,18 @@ return new class extends Migration
             $table->decimal('price', 10, 2)->default(0.00);
             $table->integer('stock')->default(0);
             $table->integer('min_stock')->default(5);
+
+            // ── Relationships ───────────────────────────────────────────
+            $table->foreignId('brand_id')->nullable()->constrained()->restrictOnDelete();
+            $table->foreignId('category_id')->nullable()->constrained()->restrictOnDelete();
+            $table->foreignId('subcategory_id')->nullable()->constrained()->nullOnDelete();
+
+            // ── Product type flags ──────────────────────────────────────
+            $table->boolean('is_for_sale')->default(false);
+            $table->boolean('is_supply')->default(false);
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
