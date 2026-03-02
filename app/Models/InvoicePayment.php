@@ -17,6 +17,7 @@ class InvoicePayment extends Model
         'payment_method_id',
         'amount',
         'payment_date',
+        'cash_shift_id',
     ];
 
     /**
@@ -46,5 +47,13 @@ class InvoicePayment extends Model
     public function paymentMethod(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class);
+    }
+
+    /**
+     * Get the cash shift for this payment.
+     */
+    public function cashShift(): BelongsTo
+    {
+        return $this->belongsTo(CashShift::class);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -27,7 +28,8 @@ class Patient extends Model
         'province',
         'zip_code',
         'country',
-        'insurance_provider',
+        'health_insurance_id',
+        'affiliate_number',
     ];
 
     /**
@@ -80,6 +82,14 @@ class Patient extends Model
         }
 
         return count($parts) > 0 ? implode(', ', $parts) : null;
+    }
+
+    /**
+     * Get the health insurance for this patient.
+     */
+    public function healthInsurance(): BelongsTo
+    {
+        return $this->belongsTo(HealthInsurance::class);
     }
 
     /**

@@ -17,6 +17,7 @@ class Service extends Model
         'description',
         'price',
         'duration_minutes',
+        'doctor_commission_percentage',
     ];
 
     /**
@@ -29,6 +30,7 @@ class Service extends Model
         return [
             'price' => 'decimal:2',
             'duration_minutes' => 'integer',
+            'doctor_commission_percentage' => 'decimal:2',
         ];
     }
 

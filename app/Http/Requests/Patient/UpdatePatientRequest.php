@@ -59,7 +59,8 @@ class UpdatePatientRequest extends FormRequest
             'province' => ['sometimes', 'nullable', 'string', 'max:100'],
             'zip_code' => ['sometimes', 'nullable', 'string', 'max:10'],
             'country' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'insurance_provider' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'health_insurance_id' => ['sometimes', 'nullable', 'integer', 'exists:health_insurances,id'],
+            'affiliate_number' => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }
 }

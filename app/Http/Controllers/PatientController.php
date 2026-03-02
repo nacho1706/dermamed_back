@@ -195,7 +195,8 @@ class PatientController extends Controller
             $rules["rows.{$idx}.country"] = 'nullable|string|max:255';
 
             // ── Obra social ──────────────────────────────────────────────────
-            $rules["rows.{$idx}.insurance_provider"] = 'nullable|string|max:255';
+            $rules["rows.{$idx}.health_insurance_id"] = 'nullable|integer|exists:health_insurances,id';
+            $rules["rows.{$idx}.affiliate_number"] = 'nullable|string|max:255';
 
             // ── Mensajes personalizados ──────────────────────────────────────
             $messages["rows.{$idx}.first_name.required"] = "{$rowLabel}: El campo 'first_name' es requerido.";
@@ -269,7 +270,8 @@ class PatientController extends Controller
             'province' => $row['province'] ?? null,
             'zip_code' => $row['zip_code'] ?? null,
             'country' => $row['country'] ?? null,
-            'insurance_provider' => $row['insurance_provider'] ?? null,
+            'health_insurance_id' => $row['health_insurance_id'] ?? null,
+            'affiliate_number' => $row['affiliate_number'] ?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ], $rows);

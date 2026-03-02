@@ -56,7 +56,8 @@ class StorePatientRequest extends FormRequest
             'province' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:10',
             'country' => 'nullable|string|max:100',
-            'insurance_provider' => 'nullable|string|max:100',
+            'health_insurance_id' => 'nullable|integer|exists:health_insurances,id',
+            'affiliate_number' => 'nullable|string|max:100',
         ];
     }
 }

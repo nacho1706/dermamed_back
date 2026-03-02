@@ -26,7 +26,8 @@ class PatientFactory
             'province',
             'zip_code',
             'country',
-            'insurance_provider',
+            'health_insurance_id',
+            'affiliate_number',
         ];
 
         foreach ($fields as $field) {

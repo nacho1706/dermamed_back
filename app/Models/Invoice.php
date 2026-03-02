@@ -15,6 +15,7 @@ class Invoice extends Model
     protected $fillable = [
         'patient_id',
         'voucher_type_id',
+        'appointment_id',
         'date',
         'total_amount',
         'status',
@@ -64,5 +65,13 @@ class Invoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(InvoicePayment::class);
+    }
+
+    /**
+     * Get the appointment associated with this invoice.
+     */
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 }

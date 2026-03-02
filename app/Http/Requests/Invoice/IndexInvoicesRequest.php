@@ -18,6 +18,9 @@ class IndexInvoicesRequest extends FormRequest
             'pagina' => 'sometimes|integer|min:1',
             'patient_id' => 'sometimes|integer|exists:patients,id',
             'status' => 'sometimes|string|in:pending,paid,cancelled',
+            'cash_shift_id' => 'sometimes|integer|exists:cash_shifts,id',
+            'date_from' => 'sometimes|date',
+            'date_to' => 'sometimes|date|after_or_equal:date_from',
         ];
     }
 }

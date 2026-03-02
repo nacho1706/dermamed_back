@@ -20,6 +20,7 @@ class InvoiceItem extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'executor_doctor_id',
     ];
 
     /**
@@ -58,5 +59,13 @@ class InvoiceItem extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * Get the executor doctor for this item (optional).
+     */
+    public function executorDoctor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'executor_doctor_id');
     }
 }

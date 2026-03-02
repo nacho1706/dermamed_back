@@ -4,6 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\ServiceResource;
+use App\Http\Resources\UserResource;
 
 class InvoiceItemResource extends JsonResource
 {
@@ -15,8 +18,10 @@ class InvoiceItemResource extends JsonResource
             'quantity' => $this->quantity,
             'unit_price' => $this->unit_price,
             'subtotal' => $this->subtotal,
+            'executor_doctor_id' => $this->executor_doctor_id,
             'product' => new ProductResource($this->whenLoaded('product')),
             'service' => new ServiceResource($this->whenLoaded('service')),
+            'executor_doctor' => new UserResource($this->whenLoaded('executorDoctor')),
         ];
     }
 }

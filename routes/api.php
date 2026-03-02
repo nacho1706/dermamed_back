@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CashShiftController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DoctorAvailabilityController;
+use App\Http\Controllers\HealthInsuranceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoicePaymentController;
@@ -46,6 +48,12 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
     });
 
+    // ── Doctors (Convenience Endpoint) ──────────────────────────────────
+    // Aliases to UserController@index with role=doctor filter pre-applied.
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
+        Route::get('/doctors', [UserController::class, 'index'])->defaults('role', 'doctor');
+    });
+
     // ── Patients ────────────────────────────────────────────────────────
     // View: Clinic Manager, Doctor, Receptionist.
     // Create/Update/Delete: Clinic Manager, Receptionist, Doctor.
@@ -58,6 +66,18 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/patients', [PatientController::class, 'store']);
         Route::put('/patients/{patient}', [PatientController::class, 'update']);
         Route::delete('/patients/{patient}', [PatientController::class, 'destroy']);
+    });
+
+    // ── Health Insurances (Obras Sociales) ──────────────────────────────
+    // View: All authenticated roles.
+    // Manage: Clinic Manager.
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
+        Route::get('/health-insurances', [HealthInsuranceController::class, 'index']);
+    });
+    Route::middleware('role:clinic_manager')->group(function () {
+        Route::post('/health-insurances', [HealthInsuranceController::class, 'store']);
+        Route::put('/health-insurances/{healthInsurance}', [HealthInsuranceController::class, 'update']);
+        Route::delete('/health-insurances/{healthInsurance}', [HealthInsuranceController::class, 'destroy']);
     });
 
     // ── Services ────────────────────────────────────────────────────────
@@ -150,15 +170,21 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/products/{product}/movements', [StockMovementController::class, 'store']);
     });
 
+    // ── Cash Shifts (Caja Diaria) ───────────────────────────────────────
+    // Manage: Clinic Manager, Receptionist.
+    Route::middleware('role:clinic_manager,receptionist')->group(function () {
+        Route::get('/cash-shifts/current', [CashShiftController::class, 'current']);
+        Route::post('/cash-shifts/open', [CashShiftController::class, 'open']);
+        Route::post('/cash-shifts/close', [CashShiftController::class, 'close']);
+    });
+
     // ── Invoices ────────────────────────────────────────────────────────
     // View: Clinic Manager, Receptionist.
-    // Create: Receptionist (POS).
+    // Create: Clinic Manager, Receptionist (POS).
     // Manage (Update/Delete): Clinic Manager.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'index']);
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
-    });
-    Route::middleware('role:receptionist')->group(function () {
         Route::post('/invoices', [InvoiceController::class, 'store']);
     });
     Route::middleware('role:clinic_manager')->group(function () {
