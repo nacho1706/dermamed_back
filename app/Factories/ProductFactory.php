@@ -12,7 +12,6 @@ class ProductFactory
         $product->name = isset($request['name']) ? $request['name'] : $product->name;
         $product->description = isset($request['description']) ? $request['description'] : $product->description;
         $product->price = isset($request['price']) ? $request['price'] : $product->price;
-        $product->stock = isset($request['stock']) ? $request['stock'] : $product->stock;
         $product->min_stock = isset($request['min_stock']) ? $request['min_stock'] : $product->min_stock;
 
         // ── New fields ──────────────────────────────────────────────────

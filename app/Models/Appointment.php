@@ -23,6 +23,7 @@ class Appointment extends Model
         'real_start_at',
         'real_end_at',
         'reserve_channel',
+        'is_overbook',
         'notes',
     ];
 

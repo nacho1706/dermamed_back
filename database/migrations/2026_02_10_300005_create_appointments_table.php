@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('scheduled_end_at');
             $table->string('status', 20)->default('scheduled'); // scheduled, in_waiting_room, in_progress, completed, cancelled, no_show
             $table->string('reserve_channel', 50)->nullable(); // whatsapp, manual, web
+            $table->boolean('is_overbook')->default(false);
             $table->text('notes')->nullable();
 
             // Timestamps reales para auditoría

@@ -16,6 +16,7 @@ class AppointmentFactory
         $appointment->scheduled_end_at = isset($request['scheduled_end_at']) ? $request['scheduled_end_at'] : $appointment->scheduled_end_at;
         $appointment->status = isset($request['status']) ? $request['status'] : $appointment->status;
         $appointment->reserve_channel = isset($request['reserve_channel']) ? $request['reserve_channel'] : $appointment->reserve_channel;
+        $appointment->is_overbook = isset($request['is_overbook']) ? filter_var($request['is_overbook'], FILTER_VALIDATE_BOOLEAN) : ($appointment->is_overbook ?? false);
         $appointment->notes = isset($request['notes']) ? $request['notes'] : $appointment->notes;
 
         return $appointment;

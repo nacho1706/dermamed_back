@@ -32,42 +32,41 @@ class StockMovementController extends Controller
         return StockMovementResource::collection($paginador);
     }
 
-    public function store(StoreStockMovementRequest $request)
+    public function store(StoreStockMovementRequest $request, Product $product)
     {
         $validated = $request->validated();
-
-        // Set the authenticated user as the one performing the movement
         $validated['user_id'] = auth()->id();
+        $validated['product_id'] = $product->id;
 
-        // Validate that stock withdrawals don't exceed available stock
-        if ($validated['type'] === 'out') {
-            $product = Product::find($validated['product_id']);
-            if ($product && $validated['quantity'] > $product->stock) {
-                return response()->json([
+        $movement = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $product) {
+            $lockedProduct = Product::where('id', $product->id)->lockForUpdate()->first();
+
+            if (! $lockedProduct) {
+                abort(404, 'Producto no encontrado');
+            }
+
+            // Validate that stock withdrawals don't exceed available stock
+            if ($validated['type'] === 'out' && $validated['quantity'] > $lockedProduct->stock) {
+                abort(response()->json([
                     'message' => 'La cantidad de salida supera el stock disponible.',
                     'errors' => [
-                        'quantity' => ["No se pueden retirar {$validated['quantity']} unidades. Stock disponible: {$product->stock}."],
+                        'quantity' => ["No se pueden retirar {$validated['quantity']} unidades. Stock disponible: {$lockedProduct->stock}."],
                     ],
-                ], 422);
+                ], 422));
             }
-        }
 
-        $movement = StockMovementFactory::fromRequest($validated);
-        $movement->save();
+            $movement = StockMovementFactory::fromRequest($validated);
+            $movement->save();
 
-        // Update the product stock
-        $product = $product ?? Product::find($validated['product_id']);
-        if ($product) {
             if ($validated['type'] === 'in') {
-                $product->stock += $validated['quantity'];
+                $lockedProduct->stock += $validated['quantity'];
             } elseif ($validated['type'] === 'out') {
-                $product->stock -= $validated['quantity'];
-            } else {
-                // adjustment: set absolute value
-                $product->stock = $validated['quantity'];
+                $lockedProduct->stock -= $validated['quantity'];
             }
-            $product->save();
-        }
+            $lockedProduct->save();
+
+            return $movement;
+        });
 
         $movement->load(['product', 'user']);
 

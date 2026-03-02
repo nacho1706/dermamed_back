@@ -53,10 +53,10 @@ class AppointmentController extends Controller
         $user = auth()->user();
 
         // Security: Doctors can only schedule for themselves
-        if ($user->isDoctor() && !$user->isClinicManager() && !$user->isReceptionist()) {
-            if (isset($validated['doctor_id']) && (int)$validated['doctor_id'] !== $user->id) {
+        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
+            if (isset($validated['doctor_id']) && (int) $validated['doctor_id'] !== $user->id) {
                 return response()->json([
-                    'message' => 'No tienes permiso para agendar turnos para otros médicos.'
+                    'message' => 'No tienes permiso para agendar turnos para otros médicos.',
                 ], 403);
             }
             // Ensure they can't bypass by omitting doctor_id (though it's required in request)
@@ -85,30 +85,30 @@ class AppointmentController extends Controller
         $user = auth()->user();
 
         // Security: Doctors can only modify their own appointments
-        if ($user->isDoctor() && !$user->isClinicManager() && !$user->isReceptionist()) {
+        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
             if ($appointment->doctor_id !== $user->id) {
                 return response()->json([
-                    'message' => 'No tienes permiso para modificar turnos de otros médicos.'
+                    'message' => 'No tienes permiso para modificar turnos de otros médicos.',
                 ], 403);
             }
 
             // Also prevent reassigning ownership to someone else
-            if (isset($validated['doctor_id']) && (int)$validated['doctor_id'] !== $user->id) {
-                 return response()->json([
-                    'message' => 'No tienes permiso para reasignar este turno a otro médico.'
+            if (isset($validated['doctor_id']) && (int) $validated['doctor_id'] !== $user->id) {
+                return response()->json([
+                    'message' => 'No tienes permiso para reasignar este turno a otro médico.',
                 ], 403);
             }
         }
 
         // REGLA 1: Congelar estructura si el turno ya es de un día pasado.
         // startOfDay() nos asegura que durante el día actual aún se puedan corregir horarios.
-        if ($appointment->scheduled_start_at->startOfDay()->isPast() && !$appointment->scheduled_start_at->isToday()) {
+        if ($appointment->scheduled_start_at->startOfDay()->isPast() && ! $appointment->scheduled_start_at->isToday()) {
             $structuralFields = ['patient_id', 'doctor_id', 'service_id', 'scheduled_start_at', 'scheduled_end_at'];
-            
+
             foreach ($structuralFields as $field) {
                 if (array_key_exists($field, $validated) && $validated[$field] != $appointment->$field) {
                     return response()->json([
-                        'message' => "No puedes modificar datos médicos u horarios de un turno de días anteriores. Solo puedes actualizar su estado o notas."
+                        'message' => 'No puedes modificar datos médicos u horarios de un turno de días anteriores. Solo puedes actualizar su estado o notas.',
                     ], 422);
                 }
             }
@@ -120,17 +120,17 @@ class AppointmentController extends Controller
             $newStatus = $validated['status'];
 
             $allowedTransitions = [
-                'scheduled'       => ['in_waiting_room', 'in_progress', 'cancelled', 'no_show'],
+                'scheduled' => ['in_waiting_room', 'in_progress', 'cancelled', 'no_show'],
                 'in_waiting_room' => ['in_progress', 'cancelled', 'no_show', 'scheduled'], // Puede irse cansado de esperar + reversión por ingreso accidental
-                'in_progress'     => ['completed', 'cancelled', 'in_waiting_room', 'scheduled'], // Reversiones por error humano
-                'no_show'         => ['in_waiting_room', 'scheduled'], // El paciente llegó tarde o reversión.
-                'cancelled'       => ['scheduled'] // Restaurar turno cancelado
+                'in_progress' => ['completed', 'cancelled', 'in_waiting_room', 'scheduled'], // Reversiones por error humano
+                'no_show' => ['in_waiting_room', 'scheduled'], // El paciente llegó tarde o reversión.
+                'cancelled' => ['scheduled'], // Restaurar turno cancelado
             ];
 
             // Si el estado actual no está en el array, es un estado final (completed, cancelled, no_show)
-            if (!isset($allowedTransitions[$currentStatus]) || !in_array($newStatus, $allowedTransitions[$currentStatus])) {
+            if (! isset($allowedTransitions[$currentStatus]) || ! in_array($newStatus, $allowedTransitions[$currentStatus])) {
                 return response()->json([
-                    'message' => "La transición de estado de '{$currentStatus}' a '{$newStatus}' no está permitida."
+                    'message' => "La transición de estado de '{$currentStatus}' a '{$newStatus}' no está permitida.",
                 ], 422);
             }
         }
@@ -156,10 +156,10 @@ class AppointmentController extends Controller
         $user = auth()->user();
 
         // Security: Doctors can only delete their own appointments
-        if ($user->isDoctor() && !$user->isClinicManager() && !$user->isReceptionist()) {
+        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
             if ($appointment->doctor_id !== $user->id) {
                 return response()->json([
-                    'message' => 'No tienes permiso para eliminar turnos de otros médicos.'
+                    'message' => 'No tienes permiso para eliminar turnos de otros médicos.',
                 ], 403);
             }
         }

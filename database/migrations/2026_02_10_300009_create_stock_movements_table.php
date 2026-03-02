@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('type', 20); // in, out, adjustment
             $table->integer('quantity');
             $table->string('reason', 255)->nullable();
+            $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
     }

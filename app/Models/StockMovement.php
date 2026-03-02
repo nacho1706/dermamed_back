@@ -18,6 +18,7 @@ class StockMovement extends Model
         'type',
         'quantity',
         'reason',
+        'notes',
     ];
 
     /**

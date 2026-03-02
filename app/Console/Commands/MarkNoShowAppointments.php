@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Appointment;
-use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class MarkNoShowAppointments extends Command
 {
