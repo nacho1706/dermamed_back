@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PaymentMethodSeeder::class,
             VoucherTypeSeeder::class,
             ServiceSeeder::class,
+            HealthInsuranceSeeder::class,
             PatientSeeder::class,
             AppointmentSeeder::class,
             BrandSeeder::class,

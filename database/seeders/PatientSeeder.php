@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Patient;
+use App\Models\HealthInsurance;
 use Illuminate\Database\Seeder;
 
 class PatientSeeder extends Seeder
@@ -30,7 +31,8 @@ class PatientSeeder extends Seeder
                 'province' => 'Buenos Aires',
                 'zip_code' => 'C1425',
                 'country' => 'Argentina',
-                'insurance_provider' => 'OSDE 310',
+                'health_insurance_id' => HealthInsurance::where('name', 'OSDE 310')->first()?->id,
+                'affiliate_number' => '123456789',
             ]
         );
 
@@ -86,7 +88,8 @@ class PatientSeeder extends Seeder
                 'email' => 'laura.sanchez@ejemplo.com',
                 'phone' => '1143214321',
                 'birth_date' => '1975-08-05',
-                'insurance_provider' => 'Galeno 220',
+                'health_insurance_id' => HealthInsurance::where('name', 'Galeno 220')->first()?->id,
+                'affiliate_number' => '987654321',
             ]
         );
 
