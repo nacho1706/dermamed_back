@@ -23,11 +23,7 @@ class ProductController extends Controller
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
-<<<<<<< HEAD
         $query = Product::with(['brand:id,name', 'category:id,name', 'subcategory:id,name,category_id']);
-=======
-        $query = Product::with(['brand:id,name']);
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
 
         // ── Text search (combined with other filters) ───────────────────
         if (isset($validated['name'])) {
@@ -42,7 +38,6 @@ class ProductController extends Controller
         // ── Filter by brand ─────────────────────────────────────────────
         if (isset($validated['brand_id'])) {
             $query->where('brand_id', $validated['brand_id']);
-<<<<<<< HEAD
         }
 
         // ── Filter by product type ──────────────────────────────────────
@@ -54,19 +49,6 @@ class ProductController extends Controller
             $query->where('is_supply', filter_var($validated['is_supply'], FILTER_VALIDATE_BOOLEAN));
         }
 
-=======
-        }
-
-        // ── Filter by product type ──────────────────────────────────────
-        if (isset($validated['is_for_sale'])) {
-            $query->where('is_for_sale', filter_var($validated['is_for_sale'], FILTER_VALIDATE_BOOLEAN));
-        }
-
-        if (isset($validated['is_supply'])) {
-            $query->where('is_supply', filter_var($validated['is_supply'], FILTER_VALIDATE_BOOLEAN));
-        }
-
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
         // ── Sorting ─────────────────────────────────────────────────────
         $sort = $validated['sort'] ?? null;
         match ($sort) {
@@ -108,13 +90,8 @@ class ProductController extends Controller
         }
 
         return response()->json([
-<<<<<<< HEAD
             'total_products'  => (clone $query)->count(),
             'total_value'     => (float) (clone $query)->selectRaw('COALESCE(SUM(price * stock), 0) as total')->value('total'),
-=======
-            'total_products' => (clone $query)->count(),
-            'total_value' => (float) (clone $query)->selectRaw('COALESCE(SUM(price * stock), 0) as total')->value('total'),
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
             'low_stock_count' => (clone $query)->whereColumn('stock', '<=', 'min_stock')->count(),
             'active_products' => (clone $query)->where('stock', '>', 0)->count(),
         ]);
@@ -127,22 +104,14 @@ class ProductController extends Controller
         $product = ProductFactory::fromRequest($validated);
         $product->save();
 
-<<<<<<< HEAD
         return (new ProductResource($product->load(['brand:id,name', 'category:id,name', 'subcategory:id,name,category_id'])))
-=======
-        return (new ProductResource($product->load(['brand:id,name'])))
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
             ->response()
             ->setStatusCode(201);
     }
 
     public function show(Product $product)
     {
-<<<<<<< HEAD
         return new ProductResource($product->load(['brand:id,name', 'category:id,name', 'subcategory:id,name,category_id']));
-=======
-        return new ProductResource($product->load(['brand:id,name']));
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
     }
 
     public function update(UpdateProductRequest $request, Product $product)
@@ -152,11 +121,7 @@ class ProductController extends Controller
         $product = ProductFactory::fromRequest($validated, $product);
         $product->save();
 
-<<<<<<< HEAD
         return new ProductResource($product->load(['brand:id,name', 'category:id,name', 'subcategory:id,name,category_id']));
-=======
-        return new ProductResource($product->load(['brand:id,name']));
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
     }
 
     public function destroy(Product $product)
@@ -241,13 +206,10 @@ class ProductController extends Controller
             $rules["rows.{$idx}.min_stock"] = 'nullable|integer|min:0';
             $rules["rows.{$idx}.description"] = 'nullable|string|max:255';
             $rules["rows.{$idx}.marca"] = 'required|string|max:255';
-<<<<<<< HEAD
             $rules["rows.{$idx}.categoria"] = 'required|string|max:255';
             $rules["rows.{$idx}.subcategoria"] = 'required|string|max:255';
             $rules["rows.{$idx}.venta"] = 'required|string|in:SI,NO,si,no,Si,No,sí,Sí';
             $rules["rows.{$idx}.insumo"] = 'required|string|in:SI,NO,si,no,Si,No,sí,Sí';
-=======
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
 
             $messages["rows.{$idx}.name.required"] = "{$rowLabel}: El campo 'name' es requerido.";
             $messages["rows.{$idx}.name.max"] = "{$rowLabel}: El nombre no puede superar los 255 caracteres.";
@@ -260,15 +222,12 @@ class ProductController extends Controller
             $messages["rows.{$idx}.min_stock.integer"] = "{$rowLabel}: El campo 'min_stock' debe ser un número entero (sin decimales).";
             $messages["rows.{$idx}.min_stock.min"] = "{$rowLabel}: El stock mínimo no puede ser negativo.";
             $messages["rows.{$idx}.marca.required"] = "{$rowLabel}: El campo 'marca' es requerido.";
-<<<<<<< HEAD
             $messages["rows.{$idx}.categoria.required"] = "{$rowLabel}: El campo 'categoria' es requerido.";
             $messages["rows.{$idx}.subcategoria.required"] = "{$rowLabel}: El campo 'subcategoria' es requerido.";
             $messages["rows.{$idx}.venta.required"] = "{$rowLabel}: El campo 'venta' es requerido (SI/NO).";
             $messages["rows.{$idx}.venta.in"] = "{$rowLabel}: El campo 'venta' debe ser SI o NO.";
             $messages["rows.{$idx}.insumo.required"] = "{$rowLabel}: El campo 'insumo' es requerido (SI/NO).";
             $messages["rows.{$idx}.insumo.in"] = "{$rowLabel}: El campo 'insumo' debe ser SI o NO.";
-=======
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
         }
 
         // Unique name check across the database
@@ -320,17 +279,12 @@ class ProductController extends Controller
         // ── 4. Resolve foreign keys (case-insensitive) ──────────────────────
         $lookupErrors = [];
 
-<<<<<<< HEAD
         // Pre-load all brands, categories, subcategories for case-insensitive matching
         $allBrands = Brand::pluck('id', DB::raw('LOWER(name)'))->toArray();
         $allCategories = Category::pluck('id', DB::raw('LOWER(name)'))->toArray();
         $allSubcategories = Subcategory::select('id', 'name', 'category_id')
             ->get()
             ->groupBy(fn ($s) => strtolower($s->name));
-=======
-        // Pre-load all brands for case-insensitive matching
-        $allBrands = Brand::pluck('id', DB::raw('LOWER(name)'))->toArray();
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
 
         $resolvedRows = [];
         foreach ($rows as $row) {
@@ -343,7 +297,6 @@ class ProductController extends Controller
                 $lookupErrors[] = "Fila {$rowNum}: La marca '{$row['marca']}' no existe en el sistema.";
             }
 
-<<<<<<< HEAD
             // Category lookup
             $categoryKey = strtolower(trim($row['categoria']));
             $categoryId = $allCategories[$categoryKey] ?? null;
@@ -369,8 +322,6 @@ class ProductController extends Controller
             $ventaNorm = strtolower(trim($row['venta'] ?? ''));
             $insumoNorm = strtolower(trim($row['insumo'] ?? ''));
 
-=======
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
             $resolvedRows[] = [
                 'name' => $row['name'],
                 'description' => $row['description'] ?? null,
@@ -380,13 +331,10 @@ class ProductController extends Controller
                     ? (int) $row['min_stock']
                     : 0,
                 'brand_id' => $brandId,
-<<<<<<< HEAD
                 'category_id' => $categoryId,
                 'subcategory_id' => $subcategoryId,
                 'is_for_sale' => in_array($ventaNorm, ['si', 'sí']),
                 'is_supply' => in_array($insumoNorm, ['si', 'sí']),
-=======
->>>>>>> fd03af49c978e17c21651ae66785d3ee47a924cf
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
