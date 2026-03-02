@@ -21,6 +21,7 @@ class AppointmentResource extends JsonResource
             'real_start_at' => $this->real_start_at?->toIso8601String(),
             'real_end_at' => $this->real_end_at?->toIso8601String(),
             'reserve_channel' => $this->reserve_channel,
+            'is_overbook' => (bool) $this->is_overbook,
             'notes' => $this->notes,
             'patient' => new PatientResource($this->whenLoaded('patient')),
             'doctor' => new UserResource($this->whenLoaded('doctor')),

@@ -31,6 +31,7 @@ class StoreAppointmentRequest extends FormRequest
             'patient_id' => 'required|integer|exists:patients,id',
             'doctor_id' => 'required|integer|exists:users,id',
             'service_id' => 'required|integer|exists:services,id',
+            'is_overbook' => 'sometimes|boolean',
             'scheduled_start_at' => array_values(array_filter([
                 'required',
                 'date',
@@ -42,7 +43,9 @@ class StoreAppointmentRequest extends FormRequest
                     : null,
                 function ($attribute, $value, $fail) {
                     $status = $this->input('status');
-                    if ($status !== 'in_progress' && $status !== 'in_waiting_room') {
+                    $isOverbook = filter_var($this->input('is_overbook'), FILTER_VALIDATE_BOOLEAN);
+
+                    if ($status !== 'in_progress' && $status !== 'in_waiting_room' && ! $isOverbook) {
                         $rule = new \App\Rules\AppointmentOverlap(
                             $this->input('doctor_id'),
                             $this->input('scheduled_start_at'),

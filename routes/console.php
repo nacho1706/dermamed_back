@@ -8,6 +8,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 use Illuminate\Support\Facades\Schedule;
+
 Schedule::command('app:mark-no-show-appointments')
     ->timezone('America/Argentina/Tucuman')
     ->dailyAt('23:59');

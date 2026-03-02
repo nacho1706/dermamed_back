@@ -49,6 +49,7 @@ class UpdateAppointmentRequest extends FormRequest
             'patient_id' => 'sometimes|required|integer|exists:patients,id',
             'doctor_id' => 'sometimes|required|integer|exists:users,id',
             'service_id' => 'sometimes|required|integer|exists:services,id',
+            'is_overbook' => 'sometimes|boolean',
             'scheduled_start_at' => [
                 'sometimes',
                 'required',
@@ -59,8 +60,13 @@ class UpdateAppointmentRequest extends FormRequest
                     $doctorId = $this->input('doctor_id') ?? $appointment->doctor_id;
                     $endTime = $this->input('scheduled_end_at') ?? $appointment->scheduled_end_at;
 
-                    $rule = new \App\Rules\AppointmentOverlap($doctorId, $value, $endTime, $appointmentId);
-                    $rule->validate($attribute, $value, $fail);
+                    $isOverbookValue = $this->has('is_overbook') ? $this->input('is_overbook') : $appointment->is_overbook;
+                    $isOverbook = filter_var($isOverbookValue, FILTER_VALIDATE_BOOLEAN);
+
+                    if (! $isOverbook) {
+                        $rule = new \App\Rules\AppointmentOverlap($doctorId, $value, $endTime, $appointmentId);
+                        $rule->validate($attribute, $value, $fail);
+                    }
                 },
             ],
             'scheduled_end_at' => 'sometimes|required|date|after:scheduled_start_at',
