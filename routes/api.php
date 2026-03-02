@@ -138,12 +138,14 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+        Route::patch('/products/{id}/restore', [ProductController::class, 'restore']);
     });
 
     // ── Stock Movements ─────────────────────────────────────────────────
     // View/Create: Clinic Manager, Receptionist.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::get('/stock-movements', [StockMovementController::class, 'index']);
+        Route::get('/stock-movements/adjustment-reasons', [ProductController::class, 'adjustmentReasons']);
         Route::get('/stock-movements/{stock_movement}', [StockMovementController::class, 'show']);
         Route::post('/products/{product}/movements', [StockMovementController::class, 'store']);
     });

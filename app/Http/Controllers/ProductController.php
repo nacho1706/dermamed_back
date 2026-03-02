@@ -25,6 +25,16 @@ class ProductController extends Controller
 
         $query = Product::with(['brand:id,name', 'category:id,name', 'subcategory:id,name,category_id']);
 
+        // ── Trashed filter (archived products) ─────────────────────────
+        if (isset($validated['trashed']) && $validated['trashed'] === 'true') {
+            $query->onlyTrashed();
+        }
+
+        // ── Low stock server-side filter ─────────────────────────────────
+        if (isset($validated['stock_status']) && $validated['stock_status'] === 'low') {
+            $query->whereColumn('stock', '<=', 'min_stock');
+        }
+
         // ── Text search (combined with other filters) ───────────────────
         if (isset($validated['name'])) {
             $query->where('name', 'ilike', '%'.$validated['name'].'%');
@@ -71,6 +81,14 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         $query = Product::query();
+
+        // ── Same trashed/stock filters as index ──────────────────────────
+        if (isset($validated['trashed']) && $validated['trashed'] === 'true') {
+            $query->onlyTrashed();
+        }
+        if (isset($validated['stock_status']) && $validated['stock_status'] === 'low') {
+            $query->whereColumn('stock', '<=', 'min_stock');
+        }
 
         // ── Same filters as index ─────────────────────────────────────────
         if (isset($validated['name'])) {
@@ -129,7 +147,27 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json([
-            'message' => 'Product deleted successfully',
+            'message' => 'Product archived successfully',
+        ]);
+    }
+
+    public function restore(int $id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+        $product->restore();
+
+        return new ProductResource($product->load(['brand:id,name', 'category:id,name', 'subcategory:id,name,category_id']));
+    }
+
+    public function adjustmentReasons()
+    {
+        return response()->json([
+            'data' => [
+                ['value' => 'sale', 'label' => 'Venta'],
+                ['value' => 'expiry', 'label' => 'Caducidad'],
+                ['value' => 'breakage', 'label' => 'Rotura'],
+                ['value' => 'internal_use_adj', 'label' => 'Uso Interno'],
+            ],
         ]);
     }
 

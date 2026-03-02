@@ -27,7 +27,10 @@ class StockMovementController extends Controller
             $query->where('type', $validated['type']);
         }
 
-        $paginador = $query->orderBy('created_at', 'desc')->paginate($cantidad, ['*'], 'page', $pagina);
+        $paginador = $query->orderBy('created_at', 'desc')
+            ->when(isset($validated['date_from']), fn ($q) => $q->where('created_at', '>=', $validated['date_from']))
+            ->when(isset($validated['date_to']), fn ($q) => $q->where('created_at', '<=', $validated['date_to'] . ' 23:59:59'))
+            ->paginate($cantidad, ['*'], 'page', $pagina);
 
         return StockMovementResource::collection($paginador);
     }
@@ -61,6 +64,17 @@ class StockMovementController extends Controller
             if ($validated['type'] === 'in') {
                 $lockedProduct->stock += $validated['quantity'];
             } elseif ($validated['type'] === 'out') {
+                $lockedProduct->stock -= $validated['quantity'];
+            } elseif ($validated['type'] === 'adjustment') {
+                // Adjustments are always subtractive (sale, expiry, breakage, internal use)
+                if ($validated['quantity'] > $lockedProduct->stock) {
+                    abort(response()->json([
+                        'message' => 'La cantidad de ajuste supera el stock disponible.',
+                        'errors' => [
+                            'quantity' => ["No se pueden ajustar {$validated['quantity']} unidades. Stock disponible: {$lockedProduct->stock}."],
+                        ],
+                    ], 422));
+                }
                 $lockedProduct->stock -= $validated['quantity'];
             }
             $lockedProduct->save();

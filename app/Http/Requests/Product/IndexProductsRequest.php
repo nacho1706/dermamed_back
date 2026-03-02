@@ -22,6 +22,8 @@ class IndexProductsRequest extends FormRequest
             'is_for_sale' => 'sometimes|string|in:true,false,1,0',
             'is_supply' => 'sometimes|string|in:true,false,1,0',
             'sort' => 'sometimes|string|in:price_asc,price_desc,name_asc,name_desc,stock_asc,stock_desc',
+            'stock_status' => 'sometimes|string|in:low',
+            'trashed' => 'sometimes|string|in:true,false',
         ];
     }
 }
