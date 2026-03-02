@@ -17,6 +17,11 @@ class IndexProductsRequest extends FormRequest
             'cantidad' => 'sometimes|integer|min:1',
             'pagina' => 'sometimes|integer|min:1',
             'name' => 'sometimes|string',
+            'category_id' => 'sometimes|integer|exists:categories,id',
+            'brand_id' => 'sometimes|integer|exists:brands,id',
+            'is_for_sale' => 'sometimes|string|in:true,false,1,0',
+            'is_supply' => 'sometimes|string|in:true,false,1,0',
+            'sort' => 'sometimes|string|in:price_asc,price_desc,name_asc,name_desc,stock_asc,stock_desc',
         ];
     }
 }

@@ -23,6 +23,9 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             PatientSeeder::class,
             AppointmentSeeder::class,
+            BrandSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
         ]);
 
         // Clinic Manager and Doctor
