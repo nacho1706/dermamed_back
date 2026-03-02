@@ -14,6 +14,7 @@ class StockMovementFactory
         $movement->type = isset($request['type']) ? $request['type'] : $movement->type;
         $movement->quantity = isset($request['quantity']) ? $request['quantity'] : $movement->quantity;
         $movement->reason = isset($request['reason']) ? $request['reason'] : $movement->reason;
+        $movement->notes = isset($request['notes']) ? $request['notes'] : $movement->notes;
 
         return $movement;
     }

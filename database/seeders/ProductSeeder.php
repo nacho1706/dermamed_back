@@ -3,19 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\Brand;
-use App\Models\Category;
 use App\Models\Product;
-use App\Models\Subcategory;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // Cache lookups
         $brand = fn (string $name) => Brand::where('name', $name)->first()?->id;
-        $category = fn (string $name) => Category::where('name', $name)->first()?->id;
-        $subcategory = fn (string $name) => Subcategory::where('name', $name)->first()?->id;
 
         $products = [
             [
@@ -201,20 +196,16 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $data) {
-            Product::firstOrCreate(
-                ['name' => $data['name']],
-                [
-                    'description' => $data['description'],
-                    'price' => $data['price'],
-                    'stock' => $data['stock'],
-                    'min_stock' => $data['min_stock'],
-                    'brand_id' => $data['brand'] ? $brand($data['brand']) : null,
-                    'category_id' => $data['category'] ? $category($data['category']) : null,
-                    'subcategory_id' => $data['subcategory'] ? $subcategory($data['subcategory']) : null,
-                    'is_for_sale' => $data['is_for_sale'],
-                    'is_supply' => $data['is_supply'],
-                ],
-            );
+            $product = Product::firstOrNew(['name' => $data['name']]);
+            $product->description = $data['description'];
+            $product->price = $data['price'];
+            $product->min_stock = $data['min_stock'];
+            $product->brand_id = $data['brand'] ? $brand($data['brand']) : null;
+            // Bypassing $fillable protection for seeding
+            if (! $product->exists) {
+                $product->stock = $data['stock'];
+            }
+            $product->save();
         }
     }
 }

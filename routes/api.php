@@ -143,7 +143,9 @@ Route::middleware('auth:api')->group(function () {
     // ── Stock Movements ─────────────────────────────────────────────────
     // View/Create: Clinic Manager, Receptionist.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
-        Route::apiResource('stock-movements', StockMovementController::class)->only(['index', 'store', 'show']);
+        Route::get('/stock-movements', [StockMovementController::class, 'index']);
+        Route::get('/stock-movements/{stock_movement}', [StockMovementController::class, 'show']);
+        Route::post('/products/{product}/movements', [StockMovementController::class, 'store']);
     });
 
     // ── Invoices ────────────────────────────────────────────────────────
