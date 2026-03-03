@@ -17,7 +17,8 @@ class InvoiceResource extends JsonResource
         return [
             'id' => $this->id,
             'date' => $this->date?->format('Y-m-d'),
-            'total_amount' => $this->total_amount,
+            'total' => (float) $this->total_amount, // Mapped for frontend compatibility
+            'total_amount' => $this->total_amount, // Kept for backwards compatibility
             'status' => $this->status,
             'cae' => $this->cae,
             'appointment_id' => $this->appointment_id,
@@ -25,7 +26,7 @@ class InvoiceResource extends JsonResource
             'voucher_type' => new VoucherTypeResource($this->whenLoaded('voucherType')),
             'appointment' => new AppointmentResource($this->whenLoaded('appointment')),
             'items' => InvoiceItemResource::collection($this->whenLoaded('items')),
-            'payments' => InvoicePaymentResource::collection($this->whenLoaded('payments')),
+            'payments' => InvoicePaymentResource::collection($this->payments),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

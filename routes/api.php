@@ -18,6 +18,8 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInvitationController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\VoucherTypeController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -173,9 +175,17 @@ Route::middleware('auth:api')->group(function () {
     // ── Cash Shifts (Caja Diaria) ───────────────────────────────────────
     // Manage: Clinic Manager, Receptionist.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
+        Route::get('/cash-shifts', [CashShiftController::class, 'index']);
         Route::get('/cash-shifts/current', [CashShiftController::class, 'current']);
         Route::post('/cash-shifts/open', [CashShiftController::class, 'open']);
         Route::post('/cash-shifts/close', [CashShiftController::class, 'close']);
+    });
+
+    // ── Payment Methods & Voucher Types ─────────────────────────────────
+    // View: Clinic Manager, Receptionist.
+    Route::middleware('role:clinic_manager,receptionist')->group(function () {
+        Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
+        Route::get('/voucher-types', [VoucherTypeController::class, 'index']);
     });
 
     // ── Invoices ────────────────────────────────────────────────────────
@@ -185,6 +195,7 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'index']);
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
+        Route::get('/invoices/{invoice}/history', [InvoiceController::class, 'history']);
         Route::post('/invoices', [InvoiceController::class, 'store']);
     });
     Route::middleware('role:clinic_manager')->group(function () {

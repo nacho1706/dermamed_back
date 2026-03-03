@@ -13,11 +13,38 @@ class InvoicePaymentController extends Controller
     public function store(StoreInvoicePaymentRequest $request, Invoice $invoice)
     {
         $validated = $request->validated();
-        $validated['invoice_id'] = $invoice->id;
 
-        $payment = InvoicePaymentFactory::fromRequest($validated);
-        $payment->save();
+        $cashShift = \App\Models\CashShift::where('status', 'open')->first();
+        if (!$cashShift) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cash_shift' => ['No hay una caja abierta. Cerrala o abrí una nueva antes de registrar pagos.'],
+            ]);
+        }
+
+        $payment = InvoicePayment::create([
+            'invoice_id' => $invoice->id,
+            'payment_method_id' => $validated['payment_method_id'],
+            'amount' => $validated['amount'],
+            'payment_date' => $validated['payment_date'] ?? now(),
+            'cash_shift_id' => $cashShift->id,
+        ]);
+
         $payment->load('paymentMethod');
+
+        // Recalculate Invoice Status
+        $totalPaid = $invoice->payments()->sum('amount');
+        $isPaid = bccomp($totalPaid, $invoice->total_amount, 2) >= 0;
+
+        $invoice->update([
+            'status' => $isPaid ? 'paid' : 'pending',
+        ]);
+
+        \App\Models\InvoiceHistory::create([
+            'invoice_id' => $invoice->id,
+            'user_id' => auth()->id(),
+            'action' => 'payment_added',
+            'description' => 'Pago registrado por $' . number_format($validated['amount'], 2, ',', '.') . '. Estado actual: ' . ($isPaid ? 'Pagada' : 'Pendiente'),
+        ]);
 
         return (new InvoicePaymentResource($payment))
             ->response()

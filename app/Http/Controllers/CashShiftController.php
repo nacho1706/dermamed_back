@@ -14,6 +14,18 @@ class CashShiftController extends Controller
     ) {}
 
     /**
+     * Get paginated history of cash shifts.
+     */
+    public function index()
+    {
+        $shifts = \App\Models\CashShift::with(['openedBy', 'closedBy'])
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        return CashShiftResource::collection($shifts);
+    }
+
+    /**
      * Get the currently open cash shift.
      */
     public function current()

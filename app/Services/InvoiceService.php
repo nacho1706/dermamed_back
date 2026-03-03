@@ -115,24 +115,44 @@ class InvoiceService
                 ]);
             }
 
-            // 5. Update invoice total
+            // 5. Register Payments and Calculate Status
+            $totalPaid = 0;
+            if (! empty($data['payments'])) {
+                foreach ($data['payments'] as $paymentData) {
+                    $amount = $paymentData['amount'];
+                    $totalPaid = bcadd($totalPaid, $amount, 2);
+
+                    InvoicePayment::create([
+                        'invoice_id' => $invoice->id,
+                        'payment_method_id' => $paymentData['payment_method_id'],
+                        'amount' => $amount,
+                        'payment_date' => now(),
+                        'cash_shift_id' => $cashShift->id,
+                    ]);
+                }
+            }
+
+            // 6. Update invoice total and status
+            $isPaid = bccomp($totalPaid, $totalAmount, 2) >= 0;
+            
             $invoice->update([
                 'total_amount' => $totalAmount,
-                'status' => 'paid',
+                'status' => $isPaid ? 'paid' : 'pending',
             ]);
 
-            // 6. Register Payment
-            if (! empty($data['payment'])) {
-                $paymentData = $data['payment'];
-
-                InvoicePayment::create([
-                    'invoice_id' => $invoice->id,
-                    'payment_method_id' => $paymentData['payment_method_id'],
-                    'amount' => $paymentData['amount'] ?? $totalAmount,
-                    'payment_date' => now(),
-                    'cash_shift_id' => $cashShift->id,
-                ]);
+            $descriptionText = 'Factura creada.';
+            if ($totalPaid > 0) {
+                $descriptionText .= ' Pago inicial: $' . number_format($totalPaid, 2, ',', '.') . '.';
+            } else {
+                $descriptionText .= ' ' . ($isPaid ? 'Monto pagado completamente.' : 'Pagos parciales / Pendiente.');
             }
+
+            \App\Models\InvoiceHistory::create([
+                'invoice_id' => $invoice->id,
+                'user_id' => auth()->id(),
+                'action' => 'created',
+                'description' => $descriptionText,
+            ]);
 
             // 7. Load relationships and return
             $invoice->load([

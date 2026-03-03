@@ -79,8 +79,47 @@ class InvoiceController extends Controller
     {
         $validated = $request->validated();
 
-        $invoice->update($validated);
-        $invoice->load(['patient', 'voucherType', 'appointment']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($invoice, $validated) {
+            $invoice->update([
+                'patient_id' => $validated['patient_id'] ?? $invoice->patient_id,
+                'voucher_type_id' => $validated['voucher_type_id'] ?? $invoice->voucher_type_id,
+                'appointment_id' => $validated['appointment_id'] ?? $invoice->appointment_id,
+                'date' => $validated['date'] ?? $invoice->date,
+                'cae' => $validated['cae'] ?? $invoice->cae,
+            ]);
+
+            if (isset($validated['items'])) {
+                $invoice->items()->delete();
+                $totalAmount = 0;
+                foreach ($validated['items'] as $item) {
+                     $unitPrice = $item['unit_price'] ?? 0;
+                     $quantity = $item['quantity'] ?? 1;
+                     $subtotal = bcmul($unitPrice, $quantity, 2);
+                     $totalAmount = bcadd($totalAmount, $subtotal, 2);
+
+                     \App\Models\InvoiceItem::create([
+                         'invoice_id' => $invoice->id,
+                         'product_id' => $item['product_id'] ?? null,
+                         'service_id' => $item['service_id'] ?? null,
+                         'executor_doctor_id' => $item['executor_doctor_id'] ?? null,
+                         'description' => $item['description'] ?? '',
+                         'quantity' => $quantity,
+                         'unit_price' => $unitPrice,
+                         'subtotal' => $subtotal,
+                     ]);
+                }
+                $invoice->update(['total_amount' => $totalAmount]);
+            }
+
+            \App\Models\InvoiceHistory::create([
+                'invoice_id' => $invoice->id,
+                'user_id' => auth()->id(),
+                'action' => 'updated',
+                'description' => 'Factura editada.',
+            ]);
+        });
+
+        $invoice->load(['patient', 'voucherType', 'appointment', 'items', 'payments', 'items.product', 'items.service', 'items.executorDoctor', 'payments.paymentMethod', 'payments.cashShift']);
 
         return new InvoiceResource($invoice);
     }
@@ -92,6 +131,18 @@ class InvoiceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Invoice deleted successfully',
+        ]);
+    }
+
+    public function history(Invoice $invoice)
+    {
+        $history = \App\Models\InvoiceHistory::where('invoice_id', $invoice->id)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'data' => $history
         ]);
     }
 }

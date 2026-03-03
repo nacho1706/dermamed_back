@@ -30,10 +30,10 @@ class StoreInvoiceRequest extends FormRequest
             'items.*.description' => 'nullable|string|max:255',
             'items.*.executor_doctor_id' => 'nullable|integer|exists:users,id',
 
-            // ── Payment ──────────────────────────────────────────────────────
-            'payment' => 'required|array',
-            'payment.payment_method_id' => 'required|integer|exists:payment_methods,id',
-            'payment.amount' => 'nullable|numeric|min:0',
+            // ── Payments ──────────────────────────────────────────────────────
+            'payments' => 'nullable|array',
+            'payments.*.payment_method_id' => 'required|integer|exists:payment_methods,id',
+            'payments.*.amount' => 'required|numeric|min:0.01',
         ];
     }
 
@@ -46,8 +46,8 @@ class StoreInvoiceRequest extends FormRequest
             'items.*.service_id.required_without' => 'Cada ítem debe tener un servicio o un producto.',
             'items.*.quantity.required' => 'La cantidad es requerida para cada ítem.',
             'items.*.quantity.min' => 'La cantidad debe ser al menos 1.',
-            'payment.required' => 'Debe incluir los datos de pago.',
-            'payment.payment_method_id.required' => 'El método de pago es requerido.',
+            'payments.required' => 'Debe incluir al menos un dato de pago (puede estar vacío pero el campo debe existir como array).',
+            'payments.*.payment_method_id.required' => 'El método de pago es requerido.',
         ];
     }
 }
