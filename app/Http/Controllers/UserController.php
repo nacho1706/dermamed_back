@@ -55,7 +55,7 @@ class UserController extends Controller
     public function index(IndexUsersRequest $request)
     {
         $validated = $request->validated();
-        $cantidad = $validated['cantidad'] ?? 10;
+        $cantidad = $validated['per_page'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
         $query = User::query()->with('roles');

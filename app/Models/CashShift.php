@@ -14,11 +14,14 @@ class CashShift extends Model
     protected $fillable = [
         'opening_time',
         'closing_time',
-        'opening_balance',
-        'closing_balance',
+        'initial_balance',
+        'final_balance',
+        'system_balance',
+        'difference',
         'user_id_opened',
         'user_id_closed',
         'status',
+        'justification',
     ];
 
     /**
@@ -31,8 +34,10 @@ class CashShift extends Model
         return [
             'opening_time' => 'datetime',
             'closing_time' => 'datetime',
-            'opening_balance' => 'decimal:2',
-            'closing_balance' => 'decimal:2',
+            'initial_balance' => 'decimal:2',
+            'final_balance'   => 'decimal:2',
+            'system_balance'  => 'decimal:2',
+            'difference'      => 'decimal:2',
         ];
     }
 

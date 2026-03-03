@@ -34,7 +34,7 @@ class CashShiftService
 
         $shift = CashShift::create([
             'opening_time' => now(),
-            'opening_balance' => $data['opening_balance'],
+            'initial_balance' => $data['opening_balance'],
             'user_id_opened' => auth()->id(),
             'status' => 'open',
         ]);
@@ -61,9 +61,26 @@ class CashShiftService
 
         $shift->load('payments');
 
+        // ── Business Rule: no pending invoices in this shift ──────────────
+        $pendingCount = \App\Models\Invoice::where('status', 'pending')
+            ->where(function ($q) use ($shift) {
+                // Primary: invoices whose payments belong to this cash shift
+                $q->whereHas('payments', fn($p) => $p->where('cash_shift_id', $shift->id))
+                  // Fallback: invoices created today (covers invoices with no payments yet)
+                  ->orWhereDate('date', $shift->opening_time->toDateString());
+            })
+            ->count();
+
+        if ($pendingCount > 0) {
+            throw ValidationException::withMessages([
+                'cash_shift' => ['No se puede cerrar la caja: Existen facturas pendientes de cobro en este turno.'],
+            ]);
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         $shift->update([
             'closing_time' => now(),
-            'closing_balance' => $data['closing_balance'],
+            'final_balance' => $data['closing_balance'] ?? $data['final_balance'] ?? 0,
             'justification' => $data['justification'] ?? null,
             'user_id_closed' => auth()->id(),
             'status' => 'closed',

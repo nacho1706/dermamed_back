@@ -14,7 +14,7 @@ class IndexUsersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cantidad' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1',
             'pagina' => 'sometimes|integer|min:1',
             'name' => 'sometimes|string',
             'email' => 'sometimes|email',

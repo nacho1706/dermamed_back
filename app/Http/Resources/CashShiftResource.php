@@ -14,14 +14,14 @@ class CashShiftResource extends JsonResource
                 $q->where('name', 'ilike', '%efectivo%');
             })
             ->sum('amount');
-        $expectedBalance = (float) bcadd($this->opening_balance, $totalIncomes, 2);
+        $expectedBalance = (float) bcadd($this->initial_balance ?? 0, $totalIncomes, 2);
 
         return [
             'id' => $this->id,
             'opening_time' => $this->opening_time?->toIso8601String(),
             'closing_time' => $this->closing_time?->toIso8601String(),
-            'opening_balance' => $this->opening_balance,
-            'closing_balance' => $this->closing_balance,
+            'opening_balance' => $this->initial_balance,
+            'closing_balance' => $this->final_balance,
             'status' => $this->status,
             'opened_by' => new UserResource($this->whenLoaded('openedBy')),
             'closed_by' => new UserResource($this->whenLoaded('closedBy')),
