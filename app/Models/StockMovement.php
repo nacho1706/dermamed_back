@@ -17,6 +17,7 @@ class StockMovement extends Model
         'user_id',
         'type',
         'quantity',
+        'previous_stock',
         'reason',
         'notes',
     ];
@@ -30,6 +31,7 @@ class StockMovement extends Model
     {
         return [
             'quantity' => 'integer',
+            'previous_stock' => 'integer',
             'created_at' => 'datetime',
         ];
     }

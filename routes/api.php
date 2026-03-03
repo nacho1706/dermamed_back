@@ -149,17 +149,19 @@ Route::middleware('auth:api')->group(function () {
 
     // ── Products ────────────────────────────────────────────────────────
     // View: Clinic Manager, Receptionist.
-    // Manage: Clinic Manager.
+    // Create/Delete (archive): Clinic Manager, Receptionist.
+    // Update/Restore/Import: Clinic Manager only.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::get('/products', [ProductController::class, 'index']);
         Route::get('/products/kpis', [ProductController::class, 'kpis']);
         Route::get('/products/{product}', [ProductController::class, 'show']);
+        // Receptionist can create new products and soft-delete (archive) them
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     });
     Route::middleware('role:clinic_manager')->group(function () {
         Route::post('/products/import', [ProductController::class, 'import']);
-        Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
-        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
         Route::patch('/products/{id}/restore', [ProductController::class, 'restore']);
     });
 

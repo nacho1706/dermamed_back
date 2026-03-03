@@ -8,6 +8,7 @@ use App\Http\Requests\StockMovement\StoreStockMovementRequest;
 use App\Http\Resources\StockMovementResource;
 use App\Models\Product;
 use App\Models\StockMovement;
+use Illuminate\Support\Facades\DB;
 
 class StockMovementController extends Controller
 {
@@ -29,7 +30,7 @@ class StockMovementController extends Controller
 
         $paginador = $query->orderBy('created_at', 'desc')
             ->when(isset($validated['date_from']), fn ($q) => $q->where('created_at', '>=', $validated['date_from']))
-            ->when(isset($validated['date_to']), fn ($q) => $q->where('created_at', '<=', $validated['date_to'] . ' 23:59:59'))
+            ->when(isset($validated['date_to']), fn ($q) => $q->where('created_at', '<=', $validated['date_to'].' 23:59:59'))
             ->paginate($cantidad, ['*'], 'page', $pagina);
 
         return StockMovementResource::collection($paginador);
@@ -41,42 +42,44 @@ class StockMovementController extends Controller
         $validated['user_id'] = auth()->id();
         $validated['product_id'] = $product->id;
 
-        $movement = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $product) {
+        $movement = DB::transaction(function () use ($validated, $product) {
             $lockedProduct = Product::where('id', $product->id)->lockForUpdate()->first();
 
             if (! $lockedProduct) {
                 abort(404, 'Producto no encontrado');
             }
 
-            // Validate that stock withdrawals don't exceed available stock
-            if ($validated['type'] === 'out' && $validated['quantity'] > $lockedProduct->stock) {
-                abort(response()->json([
-                    'message' => 'La cantidad de salida supera el stock disponible.',
-                    'errors' => [
-                        'quantity' => ["No se pueden retirar {$validated['quantity']} unidades. Stock disponible: {$lockedProduct->stock}."],
-                    ],
-                ], 422));
-            }
+            // ── Ledger Pattern: capture current stock before any mutation ──
+            $previousStock = $lockedProduct->stock;
 
-            $movement = StockMovementFactory::fromRequest($validated);
-            $movement->save();
-
+            // ── Calculate new stock based on movement type ─────────────────
             if ($validated['type'] === 'in') {
-                $lockedProduct->stock += $validated['quantity'];
+                // Entry: add to current stock
+                $newStock = $previousStock + $validated['quantity'];
             } elseif ($validated['type'] === 'out') {
-                $lockedProduct->stock -= $validated['quantity'];
-            } elseif ($validated['type'] === 'adjustment') {
-                // Adjustments are always subtractive (sale, expiry, breakage, internal use)
-                if ($validated['quantity'] > $lockedProduct->stock) {
+                // Exit: subtract from current stock
+                $newStock = $previousStock - $validated['quantity'];
+
+                if ($newStock < 0) {
                     abort(response()->json([
-                        'message' => 'La cantidad de ajuste supera el stock disponible.',
+                        'message' => 'La cantidad de salida supera el stock disponible.',
                         'errors' => [
-                            'quantity' => ["No se pueden ajustar {$validated['quantity']} unidades. Stock disponible: {$lockedProduct->stock}."],
+                            'quantity' => ["No se pueden retirar {$validated['quantity']} unidades. Stock disponible: {$previousStock}."],
                         ],
                     ], 422));
                 }
-                $lockedProduct->stock -= $validated['quantity'];
+            } else {
+                // adjustment: absolute overwrite — quantity IS the new stock level
+                $newStock = $validated['quantity'];
             }
+
+            // ── Persist the movement with the ledger snapshot ───────────────
+            $validated['previous_stock'] = $previousStock;
+            $movement = StockMovementFactory::fromRequest($validated);
+            $movement->save();
+
+            // ── Update product stock ────────────────────────────────────────
+            $lockedProduct->stock = $newStock;
             $lockedProduct->save();
 
             return $movement;

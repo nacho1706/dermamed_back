@@ -13,6 +13,7 @@ class StockMovementFactory
         $movement->user_id = isset($request['user_id']) ? $request['user_id'] : $movement->user_id;
         $movement->type = isset($request['type']) ? $request['type'] : $movement->type;
         $movement->quantity = isset($request['quantity']) ? $request['quantity'] : $movement->quantity;
+        $movement->previous_stock = isset($request['previous_stock']) ? $request['previous_stock'] : ($movement->previous_stock ?? 0);
         $movement->reason = isset($request['reason']) ? $request['reason'] : $movement->reason;
         $movement->notes = isset($request['notes']) ? $request['notes'] : $movement->notes;
 
