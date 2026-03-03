@@ -43,7 +43,7 @@ class StorePatientRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'dni' => ['required', 'string', 'regex:/^\d{7,8}$/', \Illuminate\Validation\Rule::unique('patients', 'dni')],
+            'dni' => ['nullable', 'string', 'regex:/^\d{7,8}$/', \Illuminate\Validation\Rule::unique('patients', 'dni')->whereNotNull('dni')],
             'cuit' => ['nullable', 'string', 'digits:11', \Illuminate\Validation\Rule::unique('patients', 'cuit')],
             'email' => ['nullable', 'string', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'regex:/^\+[1-9]\d{10,14}$/', 'max:20'],

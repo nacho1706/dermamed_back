@@ -46,7 +46,7 @@ class UpdatePatientRequest extends FormRequest
         return [
             'first_name' => ['sometimes', 'required', 'string', 'max:100'],
             'last_name' => ['sometimes', 'required', 'string', 'max:100'],
-            'dni' => ['sometimes', 'required', 'string', 'regex:/^\d{7,8}$/', \Illuminate\Validation\Rule::unique('patients', 'dni')->ignore($patientId)],
+            'dni' => ['sometimes', 'nullable', 'string', 'regex:/^\d{7,8}$/', \Illuminate\Validation\Rule::unique('patients', 'dni')->ignore($patientId)->whereNotNull('dni')],
             'cuit' => ['sometimes', 'nullable', 'string', 'digits:11', \Illuminate\Validation\Rule::unique('patients', 'cuit')->ignore($patientId)],
             'email' => ['sometimes', 'nullable', 'string', 'email', 'max:255', \Illuminate\Validation\Rule::unique('patients')->ignore($patientId)],
             'phone' => ['sometimes', 'nullable', 'string', 'regex:/^\+[1-9]\d{10,14}$/', 'max:20'],
