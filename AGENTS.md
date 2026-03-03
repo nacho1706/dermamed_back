@@ -179,14 +179,17 @@ public function index(IndexPatientsRequest $request)
 
 1. Crear migration: `php artisan make:migration create_{tabla}_table`
 2. Crear Model con `$fillable`, `casts()`, relaciones, `SoftDeletes` si aplica
-3. Crear Factory en `app/Factories/{Model}Factory.php`
-4. Crear Form Requests en `app/Http/Requests/{Model}/`
+3. Crear **Eloquent Factory** en `database/factories/{Model}Factory.php` (requerido para tests)
+4. Crear App Factory en `app/Factories/{Model}Factory.php`
+5. Crear Form Requests en `app/Http/Requests/{Model}/`
     - `Store{Model}Request.php`
     - `Update{Model}Request.php`
     - `Index{Models}Request.php`
-5. Crear Controller con `index`, `store`, `show`, `update`, `destroy`
-6. Agregar `apiResource` en `routes/api.php`
-7. Ejecutar migration: `docker exec backend-dermamed php artisan migrate`
+6. Crear Controller con `index`, `store`, `show`, `update`, `destroy`
+7. Agregar `apiResource` en `routes/api.php`
+8. Ejecutar migration: `docker exec backend-dermamed php artisan migrate`
+
+> **Tip rápido**: `php artisan make:model {Model} -mfc` crea migration + Eloquent Factory + Controller en un solo comando.
 
 ---
 
@@ -198,3 +201,5 @@ public function index(IndexPatientsRequest $request)
 - **Problema**: `docker exec -it` falla con "the input device is not a TTY" → **Solución**: Usar `docker exec` sin `-it`
 - **Problema**: `zsh: command not found: php` → **Solución**: Ejecutar dentro del contenedor: `docker exec backend-dermamed php artisan ...`
 - **Problema**: Intentar usar `auth:sanctum` en rutas API → **Solución**: Este proyecto usa JWT, el middleware es `auth:api`
+- **Problema**: `UpdateRequest` tiene un campo `nullable` pero la columna en DB es `NOT NULL` → **Solución**: Usar `sometimes|required` (no `sometimes|nullable`). `sometimes` = solo validar si el campo viene en el request; `required` = si viene, no puede ser null ni string vacío. Romper esta regla causará un `QueryException` en DB.
+- **Problema**: Tests fallan con `Call to undefined method ... ::factory()` → **Solución**: El Eloquent Factory (`database/factories/{Model}Factory.php`) no existe. Crearlo es obligatorio para poder usar `Model::factory()` en tests. No confundir con el App Factory (`app/Factories/{Model}Factory.php`) — son dos cosas distintas.
