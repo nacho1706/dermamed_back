@@ -19,10 +19,6 @@ class Product extends Model
         'stock',
         'min_stock',
         'brand_id',
-        'category_id',
-        'subcategory_id',
-        'is_for_sale',
-        'is_supply',
     ];
 
     /**
@@ -36,24 +32,12 @@ class Product extends Model
             'price' => 'decimal:2',
             'stock' => 'integer',
             'min_stock' => 'integer',
-            'is_for_sale' => 'boolean',
-            'is_supply' => 'boolean',
         ];
     }
 
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
-    }
-
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function subcategory(): BelongsTo
-    {
-        return $this->belongsTo(Subcategory::class);
     }
 
     /**
