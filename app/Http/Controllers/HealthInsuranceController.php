@@ -30,7 +30,7 @@ class HealthInsuranceController extends Controller
     public function update(\Illuminate\Http\Request $request, HealthInsurance $healthInsurance)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:health_insurances,name,' . $healthInsurance->id,
+            'name' => 'required|string|max:255|unique:health_insurances,name,'.$healthInsurance->id,
         ]);
 
         $healthInsurance->update($validated);
