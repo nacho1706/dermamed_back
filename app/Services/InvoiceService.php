@@ -134,7 +134,7 @@ class InvoiceService
 
             // 6. Update invoice total and status
             $isPaid = bccomp($totalPaid, $totalAmount, 2) >= 0;
-            
+
             $invoice->update([
                 'total_amount' => $totalAmount,
                 'status' => $isPaid ? 'paid' : 'pending',
@@ -142,9 +142,9 @@ class InvoiceService
 
             $descriptionText = 'Factura creada.';
             if ($totalPaid > 0) {
-                $descriptionText .= ' Pago inicial: $' . number_format($totalPaid, 2, ',', '.') . '.';
+                $descriptionText .= ' Pago inicial: $'.number_format($totalPaid, 2, ',', '.').'.';
             } else {
-                $descriptionText .= ' ' . ($isPaid ? 'Monto pagado completamente.' : 'Pagos parciales / Pendiente.');
+                $descriptionText .= ' '.($isPaid ? 'Monto pagado completamente.' : 'Pagos parciales / Pendiente.');
             }
 
             \App\Models\InvoiceHistory::create([

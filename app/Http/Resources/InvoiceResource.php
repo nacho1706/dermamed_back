@@ -4,11 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\PatientResource;
-use App\Http\Resources\VoucherTypeResource;
-use App\Http\Resources\AppointmentResource;
-use App\Http\Resources\InvoiceItemResource;
-use App\Http\Resources\InvoicePaymentResource;
 
 class InvoiceResource extends JsonResource
 {

@@ -10,7 +10,7 @@ class CashShiftResource extends JsonResource
     public function toArray(Request $request): array
     {
         $totalIncomes = $this->resource->payments()
-            ->whereHas('paymentMethod', function($q) {
+            ->whereHas('paymentMethod', function ($q) {
                 $q->where('name', 'ilike', '%efectivo%');
             })
             ->sum('amount');

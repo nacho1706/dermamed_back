@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\VoucherType;
 use App\Http\Resources\VoucherTypeResource;
-use Illuminate\Http\Request;
+use App\Models\VoucherType;
 
 class VoucherTypeController extends Controller
 {

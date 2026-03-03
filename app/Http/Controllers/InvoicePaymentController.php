@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Factories\InvoicePaymentFactory;
 use App\Http\Requests\InvoicePayment\StoreInvoicePaymentRequest;
 use App\Http\Resources\InvoicePaymentResource;
 use App\Models\Invoice;
@@ -15,7 +14,7 @@ class InvoicePaymentController extends Controller
         $validated = $request->validated();
 
         $cashShift = \App\Models\CashShift::where('status', 'open')->first();
-        if (!$cashShift) {
+        if (! $cashShift) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'cash_shift' => ['No hay una caja abierta. Cerrala o abrí una nueva antes de registrar pagos.'],
             ]);
@@ -50,7 +49,7 @@ class InvoicePaymentController extends Controller
             'invoice_id' => $invoice->id,
             'user_id' => auth()->id(),
             'action' => 'payment_added',
-            'description' => 'Pago registrado por $' . number_format($validated['amount'], 2, ',', '.') . '. Estado actual: ' . ($isPaid ? 'Pagada' : 'Pendiente'),
+            'description' => 'Pago registrado por $'.number_format($validated['amount'], 2, ',', '.').'. Estado actual: '.($isPaid ? 'Pagada' : 'Pendiente'),
         ]);
 
         return (new InvoicePaymentResource($payment))

@@ -42,7 +42,7 @@ class InvoiceController extends Controller
         }
 
         if (isset($validated['date_to'])) {
-            $query->where('date', '<=', $validated['date_to'] . ' 23:59:59');
+            $query->where('date', '<=', $validated['date_to'].' 23:59:59');
         }
 
         $paginador = $query->orderBy('date', 'desc')->paginate($cantidad, ['*'], 'page', $pagina);
@@ -94,31 +94,31 @@ class InvoiceController extends Controller
                 $invoice->items()->delete();
                 $totalAmount = 0;
                 foreach ($validated['items'] as $item) {
-                     $unitPrice = $item['unit_price'] ?? 0;
-                     $quantity = $item['quantity'] ?? 1;
-                     $subtotal = bcmul($unitPrice, $quantity, 2);
-                     $totalAmount = bcadd($totalAmount, $subtotal, 2);
+                    $unitPrice = $item['unit_price'] ?? 0;
+                    $quantity = $item['quantity'] ?? 1;
+                    $subtotal = bcmul($unitPrice, $quantity, 2);
+                    $totalAmount = bcadd($totalAmount, $subtotal, 2);
 
-                     \App\Models\InvoiceItem::create([
-                         'invoice_id' => $invoice->id,
-                         'product_id' => $item['product_id'] ?? null,
-                         'service_id' => $item['service_id'] ?? null,
-                         'executor_doctor_id' => $item['executor_doctor_id'] ?? null,
-                         'description' => $item['description'] ?? '',
-                         'quantity' => $quantity,
-                         'unit_price' => $unitPrice,
-                         'subtotal' => $subtotal,
-                     ]);
+                    \App\Models\InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'product_id' => $item['product_id'] ?? null,
+                        'service_id' => $item['service_id'] ?? null,
+                        'executor_doctor_id' => $item['executor_doctor_id'] ?? null,
+                        'description' => $item['description'] ?? '',
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,
+                        'subtotal' => $subtotal,
+                    ]);
                 }
                 $invoice->update(['total_amount' => $totalAmount]);
             }
 
             $diffText = 'Factura editada.';
             if (isset($totalAmount) && $oldTotal != $totalAmount) {
-                $diffText .= " El total cambió de $" . number_format($oldTotal, 2, ',', '.') . " a $" . number_format($totalAmount, 2, ',', '.') . ".";
+                $diffText .= ' El total cambió de $'.number_format($oldTotal, 2, ',', '.').' a $'.number_format($totalAmount, 2, ',', '.').'.';
             }
             if (isset($validated['items'])) {
-                $diffText .= " Ítems modificados.";
+                $diffText .= ' Ítems modificados.';
             }
 
             \App\Models\InvoiceHistory::create([
@@ -152,7 +152,7 @@ class InvoiceController extends Controller
             ->get();
 
         return response()->json([
-            'data' => $history
+            'data' => $history,
         ]);
     }
 }
