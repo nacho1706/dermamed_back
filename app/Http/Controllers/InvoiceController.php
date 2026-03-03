@@ -21,7 +21,7 @@ class InvoiceController extends Controller
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
-        $query = Invoice::query()->with(['patient', 'voucherType', 'appointment']);
+        $query = Invoice::query()->with(['patient', 'voucherType', 'appointment', 'items.product', 'items.service', 'items.executorDoctor', 'payments.paymentMethod']);
 
         if (isset($validated['patient_id'])) {
             $query->where('patient_id', $validated['patient_id']);
@@ -80,6 +80,8 @@ class InvoiceController extends Controller
         $validated = $request->validated();
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($invoice, $validated) {
+            $oldTotal = $invoice->total_amount;
+
             $invoice->update([
                 'patient_id' => $validated['patient_id'] ?? $invoice->patient_id,
                 'voucher_type_id' => $validated['voucher_type_id'] ?? $invoice->voucher_type_id,
@@ -111,11 +113,19 @@ class InvoiceController extends Controller
                 $invoice->update(['total_amount' => $totalAmount]);
             }
 
+            $diffText = 'Factura editada.';
+            if (isset($totalAmount) && $oldTotal != $totalAmount) {
+                $diffText .= " El total cambió de $" . number_format($oldTotal, 2, ',', '.') . " a $" . number_format($totalAmount, 2, ',', '.') . ".";
+            }
+            if (isset($validated['items'])) {
+                $diffText .= " Ítems modificados.";
+            }
+
             \App\Models\InvoiceHistory::create([
                 'invoice_id' => $invoice->id,
                 'user_id' => auth()->id(),
                 'action' => 'updated',
-                'description' => 'Factura editada.',
+                'description' => $diffText,
             ]);
         });
 

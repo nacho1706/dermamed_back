@@ -21,6 +21,13 @@ class InvoicePaymentController extends Controller
             ]);
         }
 
+        $totalPaid = (float) $invoice->payments()->sum('amount');
+        $remainingBalance = (float) bcsub($invoice->total_amount, $totalPaid, 2);
+
+        if ((float) $validated['amount'] > $remainingBalance) {
+            abort(422, 'El monto supera el saldo pendiente de la factura.');
+        }
+
         $payment = InvoicePayment::create([
             'invoice_id' => $invoice->id,
             'payment_method_id' => $validated['payment_method_id'],

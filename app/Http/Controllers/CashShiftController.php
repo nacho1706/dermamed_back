@@ -18,9 +18,9 @@ class CashShiftController extends Controller
      */
     public function index()
     {
-        $shifts = \App\Models\CashShift::with(['openedBy', 'closedBy'])
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $shifts = \App\Models\CashShift::with(['openedBy', 'closedBy', 'payments.invoice', 'payments.paymentMethod'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return CashShiftResource::collection($shifts);
     }

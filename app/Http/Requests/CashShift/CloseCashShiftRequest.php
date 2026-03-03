@@ -15,6 +15,7 @@ class CloseCashShiftRequest extends FormRequest
     {
         return [
             'closing_balance' => 'required|numeric|min:0',
+            'justification' => 'nullable|string',
         ];
     }
 }

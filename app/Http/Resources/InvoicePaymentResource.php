@@ -15,6 +15,12 @@ class InvoicePaymentResource extends JsonResource
             'payment_date' => $this->payment_date?->format('Y-m-d'),
             'cash_shift_id' => $this->cash_shift_id,
             'payment_method' => new PaymentMethodResource($this->whenLoaded('paymentMethod')),
+            'invoice' => $this->whenLoaded('invoice', function() {
+                return [
+                    'id' => $this->invoice->id,
+                    'total' => $this->invoice->total_amount,
+                ];
+            }),
         ];
     }
 }

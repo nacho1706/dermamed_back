@@ -9,9 +9,9 @@ class CashShiftResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $totalIncomes = $this->payments()
+        $totalIncomes = $this->resource->payments()
             ->whereHas('paymentMethod', function($q) {
-                $q->where('slug', 'efectivo')->orWhere('name', 'like', '%efectivo%');
+                $q->where('name', 'ilike', '%efectivo%');
             })
             ->sum('amount');
         $expectedBalance = (float) bcadd($this->opening_balance, $totalIncomes, 2);
@@ -25,9 +25,11 @@ class CashShiftResource extends JsonResource
             'status' => $this->status,
             'opened_by' => new UserResource($this->whenLoaded('openedBy')),
             'closed_by' => new UserResource($this->whenLoaded('closedBy')),
+            'closed_by_name' => $this->closedBy?->name ?? $this->closedBy?->first_name ?? 'Sistema',
             'payments' => InvoicePaymentResource::collection($this->whenLoaded('payments')),
             'total_incomes' => $totalIncomes,
             'expected_balance' => $expectedBalance,
+            'justification' => $this->justification,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

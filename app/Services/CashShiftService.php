@@ -64,6 +64,7 @@ class CashShiftService
         $shift->update([
             'closing_time' => now(),
             'closing_balance' => $data['closing_balance'],
+            'justification' => $data['justification'] ?? null,
             'user_id_closed' => auth()->id(),
             'status' => 'closed',
         ]);
