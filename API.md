@@ -19,13 +19,13 @@
 
 ```json
 // Request
-{ "email": "admin@dermamed.com", "password": "password" }
+{ "email": "director@dermamed.com", "password": "password" }
 
 // Response 200
 {
   "success": true,
   "message": "Login successful",
-  "user": { "id": 1, "name": "Administrador", "email": "...", "role": {...} },
+  "user": { "id": 1, "name": "Director Médico", "email": "...", "roles": [...] },
   "token": "eyJ0eXAiOiJKV1Q..."
 }
 ```
