@@ -167,13 +167,16 @@ class StockMovementTest extends TestCase
         $product->stock = 10;
         $product->save();
 
+        $this->withoutExceptionHandling();
+
         $response = $this->withToken($this->token)->putJson("/api/products/{$product->id}", [
             'stock' => 500, // Should be ignored
             'name' => 'Updated Name',
         ]);
-
+        if ($response->status() !== 200) {
+            dump($response->json());
+        }
         $response->assertStatus(200);
-
         $product->refresh();
         $this->assertEquals(10, $product->stock);
         $this->assertEquals('Updated Name', $product->name);
