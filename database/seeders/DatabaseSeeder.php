@@ -25,7 +25,6 @@ class DatabaseSeeder extends Seeder
             PatientSeeder::class,
             AppointmentSeeder::class,
             BrandSeeder::class,
-            CategorySeeder::class,
             ProductSeeder::class,
         ]);
 

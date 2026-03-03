@@ -15,11 +15,19 @@ return new class extends Migration
             $table->id();
             $table->dateTime('opening_time');
             $table->dateTime('closing_time')->nullable();
-            $table->decimal('opening_balance', 12, 2);
-            $table->decimal('closing_balance', 12, 2)->nullable();
+
+            // Metrics y saldos
+            $table->decimal('initial_balance', 10, 2)->default(0);
+            $table->decimal('final_balance', 10, 2)->nullable(); // Lo que se cuenta al cerrar
+            $table->decimal('system_balance', 10, 2)->nullable(); // Lo esperado según el sistema
+            $table->decimal('difference', 10, 2)->nullable(); // final - system
+
             $table->foreignId('user_id_opened')->constrained('users');
             $table->foreignId('user_id_closed')->nullable()->constrained('users');
-            $table->string('status')->default('open'); // 'open', 'closed'
+
+            // Estado (open, closed, auditing)
+            $table->string('status')->default('open');
+            $table->text('justification')->nullable();
             $table->timestamps();
         });
     }

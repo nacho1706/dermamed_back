@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('patient_id')->constrained('patients')->restrictOnDelete();
+            $table->foreignId('patient_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // IssuerictOnDelete();
             $table->foreignId('voucher_type_id')->constrained('voucher_types')->restrictOnDelete();
             $table->dateTime('date')->useCurrent();
             $table->decimal('total_amount', 10, 2)->default(0.00);

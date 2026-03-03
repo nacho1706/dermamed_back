@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Patient;
 use App\Models\HealthInsurance;
+use App\Models\Patient;
 use Illuminate\Database\Seeder;
 
 class PatientSeeder extends Seeder

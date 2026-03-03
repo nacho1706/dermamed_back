@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
             $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
             $table->foreignId('service_id')->nullable()->constrained('services')->nullOnDelete();
+            $table->foreignId('executor_doctor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('description', 255); // Snapshot of name
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 10, 2);

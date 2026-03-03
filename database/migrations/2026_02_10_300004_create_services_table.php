@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100);
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2)->default(0.00);
             $table->integer('duration_minutes')->default(30);
+            $table->decimal('price', 10, 2)->default(0.00);
+            $table->decimal('doctor_commission_percentage', 5, 2)->default(0);
+            $table->boolean('is_active')->default(true);
         });
     }
 

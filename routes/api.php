@@ -11,6 +11,7 @@ use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ServiceController;
@@ -18,7 +19,6 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInvitationController;
-use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\VoucherTypeController;
 use Illuminate\Support\Facades\Route;
 

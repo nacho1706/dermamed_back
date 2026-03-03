@@ -3,19 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\Brand;
-use App\Models\Category;
 use App\Models\Product;
-use App\Models\Subcategory;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // Cache lookups
         $brand = fn (string $name) => Brand::where('name', $name)->first()?->id;
-        $category = fn (string $name) => Category::where('name', $name)->first()?->id;
-        $subcategory = fn (string $name) => Subcategory::where('name', $name)->first()?->id;
 
         $products = [
             [
@@ -25,10 +20,6 @@ class ProductSeeder extends Seeder
                 'stock' => 50,
                 'min_stock' => 10,
                 'brand' => 'La Roche-Posay',
-                'category' => 'Skin Care',
-                'subcategory' => 'Protección Solar',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Vitamina C Sérum 20%',
@@ -37,10 +28,6 @@ class ProductSeeder extends Seeder
                 'stock' => 30,
                 'min_stock' => 5,
                 'brand' => 'SkinCeuticals',
-                'category' => 'Skin Care',
-                'subcategory' => 'Serums',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Retinol Crema Noche 0.5%',
@@ -49,10 +36,6 @@ class ProductSeeder extends Seeder
                 'stock' => 20,
                 'min_stock' => 5,
                 'brand' => 'CeraVe',
-                'category' => 'Skin Care',
-                'subcategory' => 'Serums',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Ácido Hialurónico Gel',
@@ -61,10 +44,6 @@ class ProductSeeder extends Seeder
                 'stock' => 40,
                 'min_stock' => 8,
                 'brand' => 'Vichy',
-                'category' => 'Skin Care',
-                'subcategory' => 'Hidratantes',
-                'is_for_sale' => true,
-                'is_supply' => true,
             ],
             [
                 'name' => 'Gel de Limpieza Purificante',
@@ -73,10 +52,6 @@ class ProductSeeder extends Seeder
                 'stock' => 35,
                 'min_stock' => 10,
                 'brand' => 'Bioderma',
-                'category' => 'Skin Care',
-                'subcategory' => 'Limpieza',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Crema Hidratante Reparadora',
@@ -85,10 +60,6 @@ class ProductSeeder extends Seeder
                 'stock' => 25,
                 'min_stock' => 5,
                 'brand' => 'CeraVe',
-                'category' => 'Skin Care',
-                'subcategory' => 'Hidratantes',
-                'is_for_sale' => true,
-                'is_supply' => true,
             ],
             [
                 'name' => 'Agua Termal Spray 150ml',
@@ -97,10 +68,6 @@ class ProductSeeder extends Seeder
                 'stock' => 60,
                 'min_stock' => 15,
                 'brand' => 'Eucerin',
-                'category' => 'Skin Care',
-                'subcategory' => 'Hidratantes',
-                'is_for_sale' => true,
-                'is_supply' => true,
             ],
             [
                 'name' => 'Base Fluida Couvrance',
@@ -109,10 +76,6 @@ class ProductSeeder extends Seeder
                 'stock' => 15,
                 'min_stock' => 3,
                 'brand' => 'La Roche-Posay',
-                'category' => 'Maquillaje',
-                'subcategory' => 'Base',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Rodillo Facial de Jade',
@@ -121,10 +84,6 @@ class ProductSeeder extends Seeder
                 'stock' => 12,
                 'min_stock' => 3,
                 'brand' => null,
-                'category' => 'Accesorios',
-                'subcategory' => 'Rodillos',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Funda de Satén para Almohada',
@@ -133,10 +92,6 @@ class ProductSeeder extends Seeder
                 'stock' => 20,
                 'min_stock' => 5,
                 'brand' => null,
-                'category' => 'Accesorios',
-                'subcategory' => 'Fundas de Satén',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Jeringas Descartables 5ml (x100)',
@@ -145,10 +100,6 @@ class ProductSeeder extends Seeder
                 'stock' => 10,
                 'min_stock' => 5,
                 'brand' => null,
-                'category' => 'Insumos Médicos',
-                'subcategory' => 'Jeringas',
-                'is_for_sale' => false,
-                'is_supply' => true,
             ],
             [
                 'name' => 'Gasas Estériles 10x10 (x100)',
@@ -157,10 +108,6 @@ class ProductSeeder extends Seeder
                 'stock' => 30,
                 'min_stock' => 10,
                 'brand' => null,
-                'category' => 'Insumos Médicos',
-                'subcategory' => 'Gasas',
-                'is_for_sale' => false,
-                'is_supply' => true,
             ],
             [
                 'name' => 'Guantes de Nitrilo Talle M (x100)',
@@ -169,10 +116,6 @@ class ProductSeeder extends Seeder
                 'stock' => 3,
                 'min_stock' => 5,
                 'brand' => null,
-                'category' => 'Insumos Médicos',
-                'subcategory' => 'Guantes',
-                'is_for_sale' => false,
-                'is_supply' => true,
             ],
             [
                 'name' => 'Effaclar Duo+ Corrector',
@@ -181,10 +124,6 @@ class ProductSeeder extends Seeder
                 'stock' => 18,
                 'min_stock' => 4,
                 'brand' => 'La Roche-Posay',
-                'category' => 'Maquillaje',
-                'subcategory' => 'Corrector',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
             [
                 'name' => 'Esponja Konjac Facial',
@@ -193,10 +132,6 @@ class ProductSeeder extends Seeder
                 'stock' => 8,
                 'min_stock' => 3,
                 'brand' => null,
-                'category' => 'Accesorios',
-                'subcategory' => 'Esponjas',
-                'is_for_sale' => true,
-                'is_supply' => false,
             ],
         ];
 
@@ -209,10 +144,6 @@ class ProductSeeder extends Seeder
                     'stock' => $data['stock'],
                     'min_stock' => $data['min_stock'],
                     'brand_id' => $data['brand'] ? $brand($data['brand']) : null,
-                    'category_id' => $data['category'] ? $category($data['category']) : null,
-                    'subcategory_id' => $data['subcategory'] ? $subcategory($data['subcategory']) : null,
-                    'is_for_sale' => $data['is_for_sale'],
-                    'is_supply' => $data['is_supply'],
                 ],
             );
         }
