@@ -3,7 +3,7 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CashShiftController;
-use App\Http\Controllers\CategoryController;
+// use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DoctorAvailabilityController;
 use App\Http\Controllers\HealthInsuranceController;
 use App\Http\Controllers\InvoiceController;
@@ -16,7 +16,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StockMovementController;
-use App\Http\Controllers\SubcategoryController;
+// use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInvitationController;
 use App\Http\Controllers\VoucherTypeController;
@@ -132,19 +132,19 @@ Route::middleware('auth:api')->group(function () {
     // Manage: Clinic Manager.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::get('/brands', [BrandController::class, 'index']);
-        Route::get('/categories', [CategoryController::class, 'index']);
-        Route::get('/subcategories', [SubcategoryController::class, 'index']);
+        // Route::get('/categories', [CategoryController::class, 'index']);
+        // Route::get('/subcategories', [SubcategoryController::class, 'index']);
     });
     Route::middleware('role:clinic_manager')->group(function () {
         Route::post('/brands', [BrandController::class, 'store']);
         Route::put('/brands/{brand}', [BrandController::class, 'update']);
         Route::delete('/brands/{brand}', [BrandController::class, 'destroy']);
-        Route::post('/categories', [CategoryController::class, 'store']);
-        Route::put('/categories/{category}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
-        Route::post('/subcategories', [SubcategoryController::class, 'store']);
-        Route::put('/subcategories/{subcategory}', [SubcategoryController::class, 'update']);
-        Route::delete('/subcategories/{subcategory}', [SubcategoryController::class, 'destroy']);
+        // Route::post('/categories', [CategoryController::class, 'store']);
+        // Route::put('/categories/{category}', [CategoryController::class, 'update']);
+        // Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+        // Route::post('/subcategories', [SubcategoryController::class, 'store']);
+        // Route::put('/subcategories/{subcategory}', [SubcategoryController::class, 'update']);
+        // Route::delete('/subcategories/{subcategory}', [SubcategoryController::class, 'destroy']);
     });
 
     // ── Products ────────────────────────────────────────────────────────
