@@ -14,7 +14,14 @@ class CashShiftResource extends JsonResource
                 $q->where('name', 'ilike', '%efectivo%');
             })
             ->sum('amount');
-        $expectedBalance = (float) bcadd($this->initial_balance ?? 0, $totalIncomes, 2);
+
+        $totalExpenses = (float) $this->resource->expenses()->sum('amount');
+
+        $expectedBalance = (float) bcsub(
+            bcadd((string) ($this->initial_balance ?? 0), (string) $totalIncomes, 2),
+            (string) $totalExpenses,
+            2
+        );
 
         return [
             'id' => $this->id,
@@ -27,7 +34,9 @@ class CashShiftResource extends JsonResource
             'closed_by' => new UserResource($this->whenLoaded('closedBy')),
             'closed_by_name' => $this->closedBy?->name ?? $this->closedBy?->first_name ?? 'Sistema',
             'payments' => InvoicePaymentResource::collection($this->whenLoaded('payments')),
-            'total_incomes' => $totalIncomes,
+            'expenses' => CashExpenseResource::collection($this->whenLoaded('expenses')),
+            'total_incomes' => (float) $totalIncomes,
+            'total_expenses' => $totalExpenses,
             'expected_balance' => $expectedBalance,
             'justification' => $this->justification,
             'created_at' => $this->created_at?->toIso8601String(),

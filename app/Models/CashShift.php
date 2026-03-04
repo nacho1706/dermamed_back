@@ -64,4 +64,12 @@ class CashShift extends Model
     {
         return $this->hasMany(InvoicePayment::class);
     }
+
+    /**
+     * Get the expenses registered during this cash shift.
+     */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(CashExpense::class);
+    }
 }

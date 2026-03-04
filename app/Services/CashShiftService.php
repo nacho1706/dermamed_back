@@ -13,7 +13,7 @@ class CashShiftService
     public function getCurrentShift(): ?CashShift
     {
         return CashShift::where('status', 'open')
-            ->with(['openedBy', 'closedBy', 'payments.paymentMethod', 'payments.invoice.patient'])
+            ->with(['openedBy', 'closedBy', 'payments.paymentMethod', 'payments.invoice.patient', 'expenses'])
             ->first();
     }
 

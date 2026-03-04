@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\Api\CashExpenseController;
 use App\Http\Controllers\CashShiftController;
 // use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DoctorAvailabilityController;
@@ -181,6 +182,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/cash-shifts/current', [CashShiftController::class, 'current']);
         Route::post('/cash-shifts/open', [CashShiftController::class, 'open']);
         Route::post('/cash-shifts/close', [CashShiftController::class, 'close']);
+        // ── Cash Expenses (Egresos) ─────────────────────────────────────
+        Route::post('/cash-expenses', [CashExpenseController::class, 'store']);
     });
 
     // ── Payment Methods & Voucher Types ─────────────────────────────────
