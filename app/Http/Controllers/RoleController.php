@@ -12,6 +12,9 @@ class RoleController extends Controller
      */
     public function index()
     {
-        return RoleResource::collection(Role::all());
+        $roles = \Illuminate\Support\Facades\Cache::rememberForever('roles', function () {
+            return Role::all();
+        });
+        return RoleResource::collection($roles);
     }
 }

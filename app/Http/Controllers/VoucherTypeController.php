@@ -12,6 +12,9 @@ class VoucherTypeController extends Controller
      */
     public function index()
     {
-        return VoucherTypeResource::collection(VoucherType::all());
+        $types = \Illuminate\Support\Facades\Cache::rememberForever('voucher_types', function () {
+            return VoucherType::all();
+        });
+        return VoucherTypeResource::collection($types);
     }
 }

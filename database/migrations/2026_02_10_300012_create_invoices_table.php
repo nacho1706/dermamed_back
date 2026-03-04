@@ -23,6 +23,9 @@ return new class extends Migration
             $table->string('cae', 100)->nullable(); // Future AFIP integration
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('date');
+            $table->index('status');
         });
     }
 

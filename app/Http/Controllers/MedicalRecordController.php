@@ -13,6 +13,10 @@ class MedicalRecordController extends Controller
 {
     public function index(IndexMedicalRecordsRequest $request)
     {
+        if (! auth()->user()->hasRole('doctor')) {
+            abort(403, 'Access denied: Only doctors can view medical records list.');
+        }
+        
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;

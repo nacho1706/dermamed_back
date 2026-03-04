@@ -12,6 +12,9 @@ class PaymentMethodController extends Controller
      */
     public function index()
     {
-        return PaymentMethodResource::collection(PaymentMethod::all());
+        $methods = \Illuminate\Support\Facades\Cache::rememberForever('payment_methods', function () {
+            return PaymentMethod::all();
+        });
+        return PaymentMethodResource::collection($methods);
     }
 }

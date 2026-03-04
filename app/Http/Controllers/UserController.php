@@ -19,6 +19,7 @@ class UserController extends Controller
 
         $user = UserFactory::fromRequest($validated);
         $user->save();
+        $user->roles()->sync($validated['role_ids']);
         $user->load('roles');
 
         $token = JWTAuth::fromUser($user);

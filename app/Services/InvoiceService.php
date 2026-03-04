@@ -169,4 +169,79 @@ class InvoiceService
             return $invoice;
         });
     }
+
+    /**
+     * Update an existing sale: Invoice + Items.
+     * All wrapped in a DB transaction.
+     *
+     * @throws ValidationException
+     */
+    public function updateSale(Invoice $invoice, array $validatedData): Invoice
+    {
+        return DB::transaction(function () use ($invoice, $validatedData) {
+            $oldTotal = $invoice->total_amount;
+
+            $invoice->update([
+                'patient_id' => $validatedData['patient_id'] ?? $invoice->patient_id,
+                'voucher_type_id' => $validatedData['voucher_type_id'] ?? $invoice->voucher_type_id,
+                'appointment_id' => $validatedData['appointment_id'] ?? $invoice->appointment_id,
+                'date' => $validatedData['date'] ?? $invoice->date,
+                'cae' => $validatedData['cae'] ?? $invoice->cae,
+            ]);
+
+            $totalAmount = $oldTotal;
+            if (isset($validatedData['items'])) {
+                $invoice->items()->delete();
+                $totalAmount = 0;
+                foreach ($validatedData['items'] as $item) {
+                    $unitPrice = $item['unit_price'] ?? 0;
+                    $quantity = $item['quantity'] ?? 1;
+                    $subtotal = bcmul($unitPrice, $quantity, 2);
+                    $totalAmount = bcadd($totalAmount, $subtotal, 2);
+
+                    \App\Models\InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'product_id' => $item['product_id'] ?? null,
+                        'service_id' => $item['service_id'] ?? null,
+                        'executor_doctor_id' => $item['executor_doctor_id'] ?? null,
+                        'description' => $item['description'] ?? '',
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,
+                        'subtotal' => $subtotal,
+                    ]);
+                }
+                $invoice->update(['total_amount' => $totalAmount]);
+            }
+
+            $diffText = 'Factura editada.';
+            if (isset($totalAmount) && $oldTotal != $totalAmount) {
+                $diffText .= ' El total cambió de $'.number_format($oldTotal, 2, ',', '.').' a $'.number_format($totalAmount, 2, ',', '.').'.';
+            }
+            if (isset($validatedData['items'])) {
+                $diffText .= ' Ítems modificados.';
+            }
+
+            \App\Models\InvoiceHistory::create([
+                'invoice_id' => $invoice->id,
+                'user_id' => auth()->id(),
+                'action' => 'updated',
+                'description' => $diffText,
+            ]);
+
+            $invoice->load([
+                'patient',
+                'voucherType',
+                'appointment',
+                'items',
+                'payments',
+                'items.product',
+                'items.service',
+                'items.executorDoctor',
+                'payments.paymentMethod',
+                'payments.cashShift',
+            ]);
+
+            return $invoice;
+        });
+    }
 }
