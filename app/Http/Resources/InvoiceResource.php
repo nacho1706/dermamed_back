@@ -21,7 +21,7 @@ class InvoiceResource extends JsonResource
             'voucher_type' => new VoucherTypeResource($this->whenLoaded('voucherType')),
             'appointment' => new AppointmentResource($this->whenLoaded('appointment')),
             'items' => InvoiceItemResource::collection($this->whenLoaded('items')),
-            'payments' => InvoicePaymentResource::collection($this->payments),
+            'payments' => InvoicePaymentResource::collection($this->whenLoaded('payments')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
