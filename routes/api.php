@@ -183,6 +183,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/cash-shifts/open', [CashShiftController::class, 'open']);
         Route::post('/cash-shifts/close', [CashShiftController::class, 'close']);
         // ── Cash Expenses (Egresos) ─────────────────────────────────────
+        Route::get('/cash-expenses', [CashExpenseController::class, 'index']);
         Route::post('/cash-expenses', [CashExpenseController::class, 'store']);
     });
 

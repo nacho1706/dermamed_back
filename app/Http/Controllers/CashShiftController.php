@@ -18,7 +18,7 @@ class CashShiftController extends Controller
      */
     public function index()
     {
-        $shifts = \App\Models\CashShift::with(['openedBy', 'closedBy', 'payments.invoice', 'payments.paymentMethod'])
+        $shifts = \App\Models\CashShift::with(['openedBy', 'closedBy', 'payments.invoice', 'payments.paymentMethod', 'expenses'])
             ->orderBy('created_at', 'desc')
             ->get();
 
