@@ -122,7 +122,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/doctor-availabilities', [DoctorAvailabilityController::class, 'index']);
         Route::get('/doctor-availabilities/{doctor_availability}', [DoctorAvailabilityController::class, 'show']);
     });
-    Route::middleware('role:receptionist,doctor')->group(function () {
+    Route::middleware('role:receptionist,doctor,clinic_manager')->group(function () {
+        Route::put('/doctor-availabilities/sync', [DoctorAvailabilityController::class, 'sync']);
         Route::post('/doctor-availabilities', [DoctorAvailabilityController::class, 'store']);
         Route::put('/doctor-availabilities/{doctor_availability}', [DoctorAvailabilityController::class, 'update']);
         Route::delete('/doctor-availabilities/{doctor_availability}', [DoctorAvailabilityController::class, 'destroy']);
@@ -149,13 +150,15 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // ── Products ────────────────────────────────────────────────────────
-    // View: Clinic Manager, Receptionist.
+    // View: Clinic Manager, Receptionist, Doctor.
     // Create/Delete (archive): Clinic Manager, Receptionist.
     // Update/Restore/Import: Clinic Manager only.
-    Route::middleware('role:clinic_manager,receptionist')->group(function () {
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::get('/products', [ProductController::class, 'index']);
         Route::get('/products/kpis', [ProductController::class, 'kpis']);
         Route::get('/products/{product}', [ProductController::class, 'show']);
+    });
+    Route::middleware('role:clinic_manager,receptionist')->group(function () {
         // Receptionist can create new products and soft-delete (archive) them
         Route::post('/products', [ProductController::class, 'store']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
@@ -167,11 +170,14 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // ── Stock Movements ─────────────────────────────────────────────────
-    // View/Create: Clinic Manager, Receptionist.
+    // View: Clinic Manager, Receptionist.
+    // Create (withdrawal): Clinic Manager, Receptionist, Doctor.
     Route::middleware('role:clinic_manager,receptionist')->group(function () {
         Route::get('/stock-movements', [StockMovementController::class, 'index']);
         Route::get('/stock-movements/adjustment-reasons', [ProductController::class, 'adjustmentReasons']);
         Route::get('/stock-movements/{stock_movement}', [StockMovementController::class, 'show']);
+    });
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::post('/products/{product}/movements', [StockMovementController::class, 'store']);
     });
 

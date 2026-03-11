@@ -8,6 +8,8 @@ use App\Http\Requests\MedicalRecord\StoreMedicalRecordRequest;
 use App\Http\Requests\MedicalRecord\UpdateMedicalRecordRequest;
 use App\Http\Resources\MedicalRecordResource;
 use App\Models\MedicalRecord;
+use App\Models\StockMovement;
+use Illuminate\Support\Facades\DB;
 
 class MedicalRecordController extends Controller
 {
@@ -39,9 +41,33 @@ class MedicalRecordController extends Controller
     public function store(StoreMedicalRecordRequest $request)
     {
         $validated = $request->validated();
+        $supplies  = $validated['supplies'] ?? [];
 
-        $record = MedicalRecordFactory::fromRequest($validated);
-        $record->save();
+        $record = DB::transaction(function () use ($validated, $supplies) {
+            // Build the record, storing supplies snapshot in JSONB
+            $data = $validated;
+            if (! empty($supplies)) {
+                $data['supplies_used'] = $supplies;
+            }
+            unset($data['supplies']); // not a DB column
+
+            $record = MedicalRecordFactory::fromRequest($data);
+            $record->save();
+
+            // Create stock movements (type = 'out') for each consumed supply
+            foreach ($supplies as $supply) {
+                StockMovement::create([
+                    'product_id' => $supply['product_id'],
+                    'user_id'    => auth()->id(),
+                    'type'       => 'out',
+                    'quantity'   => $supply['quantity'],
+                    'reason'     => "Consumo en consulta médica #{$record->id}",
+                ]);
+            }
+
+            return $record;
+        });
+
         $record->load(['patient', 'doctor', 'appointment']);
 
         return (new MedicalRecordResource($record))
@@ -76,3 +102,4 @@ class MedicalRecordController extends Controller
         ]);
     }
 }
+

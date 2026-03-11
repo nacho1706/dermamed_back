@@ -16,6 +16,7 @@ class MedicalRecord extends Model
         'appointment_id',
         'date',
         'content',
+        'supplies_used',
     ];
 
     /**
@@ -27,6 +28,7 @@ class MedicalRecord extends Model
     {
         return [
             'date' => 'datetime',
+            'supplies_used' => 'array',
         ];
     }
 

@@ -52,6 +52,23 @@ class PatientController extends Controller
             });
         }
 
+        if (isset($validated['insurance_provider'])) {
+            $query->where('insurance_provider', 'ilike', '%'.$validated['insurance_provider'].'%');
+        }
+
+        if (isset($validated['province'])) {
+            $query->where('province', 'ilike', '%'.$validated['province'].'%');
+        }
+
+        // Sorting
+        $sort = $validated['sort'] ?? '';
+        match ($sort) {
+            'name_asc'    => $query->orderBy('first_name')->orderBy('last_name'),
+            'name_desc'   => $query->orderByDesc('first_name')->orderByDesc('last_name'),
+            'created_asc' => $query->orderBy('created_at'),
+            default       => $query->orderByDesc('created_at'),
+        };
+
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
 
         return PatientResource::collection($paginador);
