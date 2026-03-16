@@ -27,6 +27,10 @@ class AppointmentResource extends JsonResource
             'doctor' => new UserResource($this->whenLoaded('doctor')),
             'service' => new ServiceResource($this->whenLoaded('service')),
             'medical_record' => new MedicalRecordResource($this->whenLoaded('medicalRecord')),
+            'invoice' => $this->whenLoaded('invoice', fn () => [
+                'id'     => $this->invoice->id,
+                'status' => $this->invoice->status,
+            ]),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
