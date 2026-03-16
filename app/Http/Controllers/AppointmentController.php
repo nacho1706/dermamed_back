@@ -17,9 +17,8 @@ class AppointmentController extends Controller
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
         $query = Appointment::query()
-            ->with(['patient', 'doctor', 'service'])
-            ->when(auth()->user()->hasRole('doctor'), fn ($q) => $q->with('medicalRecord'))
-            ->when(! auth()->user()->hasRole('doctor'), fn ($q) => $q->with('invoice'));
+            ->with(['patient', 'doctor', 'service', 'invoice'])
+            ->when(auth()->user()->hasRole('doctor'), fn ($q) => $q->with('medicalRecord'));
 
         if (isset($validated['patient_id'])) {
             $query->where('patient_id', $validated['patient_id']);
