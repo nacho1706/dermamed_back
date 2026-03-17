@@ -18,12 +18,12 @@ class MedicalRecordController extends Controller
         if (! auth()->user()->hasRole('doctor')) {
             abort(403, 'Access denied: Only doctors can view medical records list.');
         }
-        
+
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
-        $query = MedicalRecord::query()->with(['patient', 'doctor', 'appointment']);
+        $query = MedicalRecord::query()->with(['patient', 'doctor', 'appointment'])->withCount('attachments');
 
         if (isset($validated['patient_id'])) {
             $query->where('patient_id', $validated['patient_id']);
@@ -41,7 +41,7 @@ class MedicalRecordController extends Controller
     public function store(StoreMedicalRecordRequest $request)
     {
         $validated = $request->validated();
-        $supplies  = $validated['supplies'] ?? [];
+        $supplies = $validated['supplies'] ?? [];
 
         $record = DB::transaction(function () use ($validated, $supplies) {
             // Build the record, storing supplies snapshot in JSONB
@@ -58,10 +58,10 @@ class MedicalRecordController extends Controller
             foreach ($supplies as $supply) {
                 StockMovement::create([
                     'product_id' => $supply['product_id'],
-                    'user_id'    => auth()->id(),
-                    'type'       => 'out',
-                    'quantity'   => $supply['quantity'],
-                    'reason'     => "Consumo en consulta médica #{$record->id}",
+                    'user_id' => auth()->id(),
+                    'type' => 'out',
+                    'quantity' => $supply['quantity'],
+                    'reason' => "Consumo en consulta médica #{$record->id}",
                 ]);
             }
 
@@ -77,7 +77,7 @@ class MedicalRecordController extends Controller
 
     public function show(MedicalRecord $medicalRecord)
     {
-        $medicalRecord->load(['patient', 'doctor', 'appointment']);
+        $medicalRecord->load(['patient', 'doctor', 'appointment', 'attachments']);
 
         return new MedicalRecordResource($medicalRecord);
     }
@@ -102,4 +102,3 @@ class MedicalRecordController extends Controller
         ]);
     }
 }
-

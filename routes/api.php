@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\CashExpenseController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BrandController;
-use App\Http\Controllers\Api\CashExpenseController;
 use App\Http\Controllers\CashShiftController;
 // use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DoctorAvailabilityController;
@@ -10,6 +10,7 @@ use App\Http\Controllers\HealthInsuranceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoicePaymentController;
+use App\Http\Controllers\MedicalRecordAttachmentController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentMethodController;
@@ -113,7 +114,23 @@ Route::middleware('auth:api')->group(function () {
     // ── Medical Records (Doctor ONLY) ───────────────────────────────────
     Route::middleware('role:doctor')->group(function () {
         Route::apiResource('medical-records', MedicalRecordController::class);
+
+        // Adjuntos (fotos): subida y borrado solo para doctor
+        Route::post(
+            '/medical-records/{medical_record}/attachments',
+            [MedicalRecordAttachmentController::class, 'store']
+        );
+        Route::delete(
+            '/medical-records/{medical_record}/attachments/{attachment}',
+            [MedicalRecordAttachmentController::class, 'destroy']
+        );
     });
+
+    // Lectura de adjuntos: cualquier rol autenticado (recepción puede ver fotos al cobrar)
+    Route::get(
+        '/medical-records/{medical_record}/attachments/{attachment}',
+        [MedicalRecordAttachmentController::class, 'show']
+    );
 
     // ── Doctor Availabilities ───────────────────────────────────────────
     // View: Clinic Manager, Receptionist, Doctor.
@@ -170,9 +187,9 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // ── Stock Movements ─────────────────────────────────────────────────
-    // View: Clinic Manager, Receptionist.
+    // View: Clinic Manager, Receptionist, Doctor.
     // Create (withdrawal): Clinic Manager, Receptionist, Doctor.
-    Route::middleware('role:clinic_manager,receptionist')->group(function () {
+    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::get('/stock-movements', [StockMovementController::class, 'index']);
         Route::get('/stock-movements/adjustment-reasons', [ProductController::class, 'adjustmentReasons']);
         Route::get('/stock-movements/{stock_movement}', [StockMovementController::class, 'show']);

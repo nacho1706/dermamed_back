@@ -129,6 +129,17 @@ Todos los endpoints protegidos siguen el mismo patrón de paginación:
 
 **Campos:** `patient_id`_, `doctor_id`_, `appointment_id`, `date`_, `content`_
 
+### Adjuntos de Evolución (Fotos)
+
+| Method   | Endpoint                                                  | Auth           | Descripción                     |
+| -------- | --------------------------------------------------------- | -------------- | ------------------------------- |
+| `POST`   | `/medical-records/{id}/attachments`                       | `role:doctor`  | Subir imágenes (`multipart`)    |
+| `GET`    | `/medical-records/{id}/attachments/{att_id}`              | `auth:api`     | Ver imagen inline (no descarga) |
+| `DELETE` | `/medical-records/{id}/attachments/{att_id}`              | `role:doctor`  | Eliminar adjunto                |
+
+> ⚠️ `POST` espera `multipart/form-data` con campo `attachments[]` (array de imágenes). No setear `Content-Type` manualmente.
+> ⚠️ `GET` responde con `Content-Disposition: inline` — el navegador renderiza la imagen directamente con el token JWT en el header.
+
 ---
 
 ## Disponibilidad de Doctores

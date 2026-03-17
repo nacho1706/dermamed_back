@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MedicalRecord extends Model
 {
@@ -54,5 +55,13 @@ class MedicalRecord extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    /**
+     * Get the attachments (photos) for this medical record.
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(MedicalRecordAttachment::class);
     }
 }
