@@ -69,9 +69,10 @@ class PatientController extends Controller
             default       => $query->orderByDesc('created_at'),
         };
 
-        $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
+        $paginador = $query->with('healthInsurance')->paginate($cantidad, ['*'], 'page', $pagina);
 
         return PatientResource::collection($paginador);
+
     }
 
     public function store(StorePatientRequest $request)
@@ -80,14 +81,18 @@ class PatientController extends Controller
 
         $patient = PatientFactory::fromRequest($validated);
         $patient->save();
+        $patient->load('healthInsurance');
 
         return (new PatientResource($patient))
             ->response()
             ->setStatusCode(201);
+
     }
 
     public function show(\Illuminate\Http\Request $request, Patient $patient)
     {
+        $patient->load('healthInsurance');
+
         if ($request->user()->hasRole('doctor')) {
             $patient->load('medicalRecords');
         }
@@ -95,14 +100,17 @@ class PatientController extends Controller
         return new PatientResource($patient);
     }
 
+
     public function update(UpdatePatientRequest $request, Patient $patient)
     {
         $validated = $request->validated();
 
         $patient = PatientFactory::fromRequest($validated, $patient);
         $patient->save();
+        $patient->load('healthInsurance');
 
         return new PatientResource($patient);
+
     }
 
     public function destroy(\Illuminate\Http\Request $request, Patient $patient)
