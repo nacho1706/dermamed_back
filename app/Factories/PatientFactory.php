@@ -31,10 +31,11 @@ class PatientFactory
         ];
 
         foreach ($fields as $field) {
-            if (isset($request[$field])) {
+            if (array_key_exists($field, $request)) {
                 $patient->$field = $request[$field];
             }
         }
+
 
         return $patient;
     }
