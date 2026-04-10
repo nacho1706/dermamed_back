@@ -53,7 +53,9 @@ class PatientController extends Controller
         }
 
         if (isset($validated['insurance_provider'])) {
-            $query->where('insurance_provider', 'ilike', '%'.$validated['insurance_provider'].'%');
+            $query->whereHas('healthInsurance', function ($q) use ($validated) {
+                $q->where('name', 'ilike', '%'.$validated['insurance_provider'].'%');
+            });
         }
 
         if (isset($validated['province'])) {
