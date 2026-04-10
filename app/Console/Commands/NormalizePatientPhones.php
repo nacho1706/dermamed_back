@@ -33,7 +33,7 @@ class NormalizePatientPhones extends Command
             $this->warn('Running in DRY-RUN mode. No changes will be saved.');
         }
 
-        $patients = Patient::whereNotNull('phone')->get();
+        $patients = Patient::query()->whereNotNull('phone')->lazy();
 
         $updated = 0;
         $skipped = 0;
@@ -57,8 +57,8 @@ class NormalizePatientPhones extends Command
             $this->line("  [UPDATE] ID {$patient->id} ({$patient->first_name} {$patient->last_name}): '{$original}' → '{$normalized}'");
 
             if (! $isDryRun) {
-                $patient->phone = $normalized;
-                $patient->saveQuietly(); // avoid triggering observers
+                // Use query builder update to avoid triggering observers and bypass potential stdClass hydration issues
+                Patient::query()->where('id', $patient->id)->update(['phone' => $normalized]);
             }
 
             $updated++;
