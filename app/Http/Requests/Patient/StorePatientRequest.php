@@ -17,8 +17,14 @@ class StorePatientRequest extends FormRequest
             $phone = (string) $this->input('phone');
             $digits = preg_replace('/[^0-9]/', '', $phone);
 
+            // Remove a single leading zero (local prefix like '0' + area code)
             if (str_starts_with($digits, '0')) {
-                $digits = ltrim($digits, '0');
+                $digits = substr($digits, 1);
+            }
+
+            // If digits is empty after stripping, leave phone as-is for validation to reject
+            if (empty($digits)) {
+                return;
             }
 
             if (strlen($digits) === 10) {
@@ -28,7 +34,7 @@ class StorePatientRequest extends FormRequest
                 // Number with country code but missing mobile '9' (e.g., 541144445555)
                 $this->merge(['phone' => '+549'.substr($digits, 2)]);
             } elseif (strlen($digits) === 13 && str_starts_with($digits, '549')) {
-                // Perfect Argentinian mobile format
+                // Perfect Argentinian mobile format (e.g., 5491144445555)
                 $this->merge(['phone' => '+'.$digits]);
             } elseif (! empty($digits)) {
                 // Keep the + if it had one (for other countries)

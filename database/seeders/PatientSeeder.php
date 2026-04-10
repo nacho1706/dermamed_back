@@ -21,7 +21,7 @@ class PatientSeeder extends Seeder
                 'last_name' => 'Pérez',
                 'cuit' => '20301234568',
                 'email' => 'juan.perez@example.com',
-                'phone' => '+541144445555',
+                'phone' => '+5491144445555',
                 'birth_date' => '1985-06-15',
                 'street' => 'Av. Libertador',
                 'street_number' => '1500',
@@ -51,7 +51,7 @@ class PatientSeeder extends Seeder
             [
                 'first_name' => 'Carlos',
                 'last_name' => 'Rodríguez',
-                'phone' => '1155556666',
+                'phone' => '+5491155556666',
                 'birth_date' => '1990-03-20',
             ]
         );
@@ -86,7 +86,7 @@ class PatientSeeder extends Seeder
                 'last_name' => 'Sánchez',
                 'cuit' => '27225556669',
                 'email' => 'laura.sanchez@ejemplo.com',
-                'phone' => '1143214321',
+                'phone' => '+5491143214321',
                 'birth_date' => '1975-08-05',
                 'health_insurance_id' => HealthInsurance::where('name', 'Galeno 220')->first()?->id,
                 'affiliate_number' => '987654321',
