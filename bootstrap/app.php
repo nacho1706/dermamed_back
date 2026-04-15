@@ -63,4 +63,26 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 403);
             }
         });
+
+        // 409 - PostgreSQL Unique Violation (23505)
+        $exceptions->render(function (\Illuminate\Database\UniqueConstraintViolationException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de unicidad: Ya existe un registro con esos datos.',
+                    'code' => '23505'
+                ], 409);
+            }
+        });
+
+        // Fallback para QueryException 23505
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+            if (($request->is('api/*') || $request->expectsJson()) && $e->getCode() === '23505') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de unicidad: Ya existe un registro con esos datos.',
+                    'code' => '23505'
+                ], 409);
+            }
+        });
     })->create();
