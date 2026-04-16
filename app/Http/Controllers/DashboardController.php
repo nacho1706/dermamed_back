@@ -8,48 +8,67 @@ use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\Product;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function stats(Request $request)
     {
-        $todayStr = Carbon::now()->toDateString();
-        $yesterdayStr = Carbon::yesterday()->toDateString();
+        $dateFromStr = $request->query('date_from', Carbon::today()->toDateString());
+        $dateToStr = $request->query('date_to', Carbon::today()->toDateString());
+
+        $dateFrom = Carbon::parse($dateFromStr)->startOfDay();
+        $dateTo = Carbon::parse($dateToStr)->endOfDay();
+        
+        $diffInDays = $dateFrom->diffInDays($dateTo);
+
+        $prevDateFrom = $dateFrom->copy()->subDays($diffInDays + 1)->startOfDay();
+        $prevDateTo = $dateTo->copy()->subDays($diffInDays + 1)->endOfDay();
 
         // 1. Incomes
-        $todayIncome = InvoicePayment::whereDate('payment_date', $todayStr)->sum('amount');
-        $yesterdayIncome = InvoicePayment::whereDate('payment_date', $yesterdayStr)->sum('amount');
-        $incomeVar = $yesterdayIncome > 0 ? (($todayIncome - $yesterdayIncome) / $yesterdayIncome) * 100 : 100;
+        $currentIncome = InvoicePayment::whereBetween('payment_date', [$dateFrom, $dateTo])->sum('amount');
+        $prevIncome = InvoicePayment::whereBetween('payment_date', [$prevDateFrom, $prevDateTo])->sum('amount');
+        $incomeVar = $prevIncome > 0 ? (($currentIncome - $prevIncome) / $prevIncome) * 100 : 100;
 
         // 2. Appointments
-        $todayAppointments = Appointment::whereDate('scheduled_start_at', $todayStr)->count();
-        $yesterdayAppointments = Appointment::whereDate('scheduled_start_at', $yesterdayStr)->count();
-        $appointmentsVar = $yesterdayAppointments > 0 ? (($todayAppointments - $yesterdayAppointments) / $yesterdayAppointments) * 100 : 100;
+        $currentAppointments = Appointment::whereBetween('scheduled_start_at', [$dateFrom, $dateTo])->count();
+        $prevAppointments = Appointment::whereBetween('scheduled_start_at', [$prevDateFrom, $prevDateTo])->count();
+        $appointmentsVar = $prevAppointments > 0 ? (($currentAppointments - $prevAppointments) / $prevAppointments) * 100 : 100;
 
         // 3. New Patients
-        $todayPatients = Patient::whereDate('created_at', $todayStr)->count();
-        $yesterdayPatients = Patient::whereDate('created_at', $yesterdayStr)->count();
-        $patientsVar = $yesterdayPatients > 0 ? (($todayPatients - $yesterdayPatients) / $yesterdayPatients) * 100 : 100;
+        $currentPatients = Patient::whereBetween('created_at', [$dateFrom, $dateTo])->count();
+        $prevPatients = Patient::whereBetween('created_at', [$prevDateFrom, $prevDateTo])->count();
+        $patientsVar = $prevPatients > 0 ? (($currentPatients - $prevPatients) / $prevPatients) * 100 : 100;
 
         // 4. Income by Payment Method (Donut)
         $incomeByMethod = InvoicePayment::join('payment_methods', 'invoice_payments.payment_method_id', '=', 'payment_methods.id')
+            ->whereBetween('invoice_payments.payment_date', [$dateFrom, $dateTo])
             ->select('payment_methods.name', DB::raw('SUM(invoice_payments.amount) as total'))
             ->groupBy('payment_methods.name')
             ->get();
 
-        // 5. Weekly Flow (Area Chart)
+        // 5. Flow
+        $flowQuery = Appointment::whereBetween('scheduled_start_at', [$dateFrom, $dateTo])
+            ->select(
+                DB::raw('DATE(scheduled_start_at) as date'),
+                DB::raw('count(*) as scheduled'),
+                DB::raw("sum(case when status in ('completed', 'in_progress') then 1 else 0 end) as effective")
+            )
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $period = CarbonPeriod::create($dateFrom, $dateTo);
         $weeklyFlow = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->toDateString();
-            $scheduled = Appointment::whereDate('scheduled_start_at', $date)->count();
-            $effective = Appointment::whereDate('scheduled_start_at', $date)
-                ->whereIn('status', ['completed', 'in_progress'])->count();
-            
+        foreach ($period as $date) {
+            $dateStr = $date->toDateString();
+            $data = $flowQuery->get($dateStr);
             $weeklyFlow[] = [
-                'date' => $date,
-                'scheduled' => $scheduled,
-                'effective' => $effective,
+                'date' => $dateStr,
+                'scheduled' => $data ? (int) $data->scheduled : 0,
+                'effective' => $data ? (int) $data->effective : 0,
             ];
         }
 
@@ -69,9 +88,9 @@ class DashboardController extends Controller
 
         return response()->json([
             'kpis' => [
-                'income' => ['value' => $todayIncome, 'variation' => round($incomeVar, 2)],
-                'appointments' => ['value' => $todayAppointments, 'variation' => round($appointmentsVar, 2)],
-                'new_patients' => ['value' => $todayPatients, 'variation' => round($patientsVar, 2)],
+                'income' => ['value' => $currentIncome, 'variation' => round($incomeVar, 2)],
+                'appointments' => ['value' => $currentAppointments, 'variation' => round($appointmentsVar, 2)],
+                'new_patients' => ['value' => $currentPatients, 'variation' => round($patientsVar, 2)],
             ],
             'income_distribution' => $incomeByMethod,
             'weekly_flow' => $weeklyFlow,
