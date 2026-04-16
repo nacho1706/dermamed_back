@@ -22,6 +22,7 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInvitationController;
 use App\Http\Controllers\VoucherTypeController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -46,11 +47,13 @@ Route::middleware('auth:api')->group(function () {
     });
     // Write access: clinic_manager only (invite, update, delete).
     Route::middleware('role:clinic_manager')->group(function () {
+        Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
         Route::post('/users/invite', [UserInvitationController::class, 'invite']);
         Route::post('/users/{user}/resend-invite', [UserInvitationController::class, 'resend']);
         Route::put('/users/{user}', [UserController::class, 'update']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
     });
+
 
     // ── Doctors (Convenience Endpoint) ──────────────────────────────────
     // Aliases to UserController@index with role=doctor filter pre-applied.
