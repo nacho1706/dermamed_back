@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AppointmentCreated;
 use App\Events\AppointmentStatusChanged;
 use App\Factories\AppointmentFactory;
 use App\Http\Requests\Appointment\IndexAppointmentsRequest;
@@ -69,6 +70,8 @@ class AppointmentController extends Controller
         $appointment = AppointmentFactory::fromRequest($validated);
         $appointment->save();
         $appointment->load(['patient', 'doctor', 'service']);
+
+        broadcast(new AppointmentCreated($appointment))->toOthers();
 
         return (new AppointmentResource($appointment))
             ->response()

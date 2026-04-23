@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
     libicu-dev libpq-dev libonig-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
-    && docker-php-ext-install gd zip intl pdo pdo_pgsql bcmath opcache \
+    && docker-php-ext-install gd zip intl pdo pdo_pgsql bcmath opcache pcntl \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Composer
