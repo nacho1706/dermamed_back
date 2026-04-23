@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AppointmentStatusChanged;
 use App\Factories\AppointmentFactory;
 use App\Http\Requests\Appointment\IndexAppointmentsRequest;
 use App\Http\Requests\Appointment\StoreAppointmentRequest;
@@ -150,9 +151,15 @@ class AppointmentController extends Controller
             $appointment->check_in_at = null;
         }
 
+        $previousStatus = $appointment->status;
+
         $appointment = AppointmentFactory::fromRequest($validated, $appointment);
         $appointment->save();
         $appointment->load(['patient', 'doctor', 'service']);
+
+        if ($appointment->status !== $previousStatus) {
+            broadcast(new AppointmentStatusChanged($appointment))->toOthers();
+        }
 
         return new AppointmentResource($appointment);
     }
