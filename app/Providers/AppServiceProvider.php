@@ -22,5 +22,6 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\PaymentMethod::observe(\App\Observers\PaymentMethodObserver::class);
         \App\Models\Role::observe(\App\Observers\RoleObserver::class);
         \App\Models\VoucherType::observe(\App\Observers\VoucherTypeObserver::class);
+        \App\Models\Appointment::observe(\App\Observers\AppointmentObserver::class);
     }
 }
