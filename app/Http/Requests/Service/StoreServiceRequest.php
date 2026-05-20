@@ -18,6 +18,8 @@ class StoreServiceRequest extends FormRequest
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'duration_minutes' => 'required|integer|min:1',
+            'followup_default_days' => 'nullable|integer|min:1|max:730',
+            'followup_notify_anticipation_days' => 'nullable|integer|min:1|max:90',
         ];
     }
 }
