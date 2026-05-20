@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             AppointmentSeeder::class,
             BrandSeeder::class,
             ProductSeeder::class,
+            ClinicSettingSeeder::class,
         ]);
 
         // Clinic Manager and Doctor
@@ -68,5 +69,8 @@ class DatabaseSeeder extends Seeder
         );
         $receptionistRole = \App\Models\Role::where('name', 'receptionist')->first();
         $receptionist->roles()->syncWithoutDetaching([$receptionistRole->id]);
+
+        // Reminders dependen de doctor + clinic_manager ya creados arriba.
+        $this->call(TreatmentReminderSeeder::class);
     }
 }
