@@ -18,6 +18,8 @@ class Service extends Model
         'price',
         'duration_minutes',
         'doctor_commission_percentage',
+        'followup_default_days',
+        'followup_notify_anticipation_days',
     ];
 
     /**
@@ -31,6 +33,8 @@ class Service extends Model
             'price' => 'decimal:2',
             'duration_minutes' => 'integer',
             'doctor_commission_percentage' => 'decimal:2',
+            'followup_default_days' => 'integer',
+            'followup_notify_anticipation_days' => 'integer',
         ];
     }
 

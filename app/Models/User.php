@@ -138,4 +138,18 @@ class User extends Authenticatable implements JWTSubject
 
         return $this->roles->contains('name', $role);
     }
+
+    /**
+     * Check if the user has any of the given roles.
+     *
+     * @param  array<int, string>  $roles
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        return $this->roles->whereIn('name', $roles)->isNotEmpty();
+    }
 }

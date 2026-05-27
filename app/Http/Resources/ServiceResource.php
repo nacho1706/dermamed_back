@@ -16,6 +16,8 @@ class ServiceResource extends JsonResource
             'price' => $this->price,
             'duration_minutes' => $this->duration_minutes,
             'doctor_commission_percentage' => $this->doctor_commission_percentage,
+            'followup_default_days' => $this->followup_default_days,
+            'followup_notify_anticipation_days' => $this->followup_notify_anticipation_days,
         ];
     }
 }

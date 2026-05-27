@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CashExpenseController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ClinicSettingController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CashShiftController;
 // use App\Http\Controllers\CategoryController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\TreatmentReminderController;
 // use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInvitationController;
@@ -243,5 +245,25 @@ Route::middleware('auth:api')->group(function () {
     });
     Route::middleware('role:clinic_manager')->group(function () {
         Route::delete('/invoices/{invoice}/payments/{payment}', [InvoicePaymentController::class, 'destroy']);
+    });
+
+    // ── Treatment Reminders ─────────────────────────────────────────────
+    Route::middleware('role:receptionist,doctor,clinic_manager')->group(function () {
+        Route::get('/treatment-reminders', [TreatmentReminderController::class, 'index']);
+        Route::post('/treatment-reminders', [TreatmentReminderController::class, 'store']);
+        Route::get('/treatment-reminders/stats', [TreatmentReminderController::class, 'stats']);
+        Route::get('/treatment-reminders/{treatmentReminder}', [TreatmentReminderController::class, 'show']);
+        Route::patch('/treatment-reminders/{treatmentReminder}', [TreatmentReminderController::class, 'update']);
+        Route::get('/treatment-reminders/{treatmentReminder}/messages', [TreatmentReminderController::class, 'messages']);
+    });
+
+    Route::middleware('role:doctor,clinic_manager')->group(function () {
+        Route::delete('/treatment-reminders/{treatmentReminder}', [TreatmentReminderController::class, 'destroy']);
+    });
+
+    // ── Clinic Settings ─────────────────────────────────────────────────
+    Route::get('/clinic-settings', [ClinicSettingController::class, 'index']); // autenticado
+    Route::middleware('role:clinic_manager')->group(function () {
+        Route::patch('/clinic-settings', [ClinicSettingController::class, 'update']);
     });
 });
