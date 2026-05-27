@@ -38,6 +38,9 @@ class TreatmentReminderController extends Controller
         if ($request->filled('doctor_id')) {
             $query->where('doctor_id', $request->doctor_id);
         }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
         if ($request->filled('from')) {
             $query->whereDate('due_at', '>=', $request->from);
         }
