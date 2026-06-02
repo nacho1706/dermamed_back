@@ -27,6 +27,11 @@ use App\Http\Controllers\VoucherTypeController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
+// CSRF bootstrap: issues the XSRF-TOKEN cookie that axios echoes back in
+// the X-XSRF-TOKEN header on mutations. Cheap, idempotent, callable while
+// unauthenticated.
+Route::get('/csrf-token', [UserController::class, 'csrfToken']);
+
 // Public auth routes (rate-limited to prevent brute-force)
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/login', [UserController::class, 'login']);

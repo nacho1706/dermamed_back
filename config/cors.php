@@ -35,6 +35,9 @@ return [
 
     'max_age' => 600,
 
-    'supports_credentials' => false,
+    // The frontend now authenticates via HttpOnly cookies, so the browser
+    // must be allowed to send credentials on cross-origin requests. This
+    // requires `allowed_origins` to be an explicit allowlist (no '*').
+    'supports_credentials' => true,
 
 ];

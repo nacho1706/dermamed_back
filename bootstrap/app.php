@@ -21,6 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            // Lift the JWT out of the auth cookie into the Authorization
+            // header before jwt-auth runs, so cookie sessions and legacy
+            // Bearer tokens both work.
+            \App\Http\Middleware\InjectJwtFromCookie::class,
+        ]);
+        $middleware->api(append: [
+            // Enforce double-submit CSRF on mutating cookie-auth requests.
+            \App\Http\Middleware\VerifyCsrfHeader::class,
         ]);
 
         $middleware->alias([

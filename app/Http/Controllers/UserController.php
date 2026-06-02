@@ -10,6 +10,7 @@ use App\Http\Requests\User\UpdateMeRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\AuthCookies;
 use App\Support\Search;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -33,10 +34,16 @@ class UserController extends Controller
 
         $user = User::where('email', $validated['email'])->with('roles')->first();
 
-        return response()->json([
+        // The JWT is delivered as an HttpOnly cookie so XSS cannot read it.
+        // The token is also returned in the body for backwards-compat with
+        // legacy Bearer clients (tests, server-to-server); the frontend
+        // ignores it and reads the cookie set automatically by the browser.
+        $response = response()->json([
             'user' => new UserResource($user),
             'token' => $token,
         ]);
+
+        return AuthCookies::attach($response, $token);
     }
 
     public function index(IndexUsersRequest $request)
@@ -139,19 +146,55 @@ class UserController extends Controller
 
     public function logout()
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (\Throwable $e) {
+            // If the token was already invalid or missing, log out is still
+            // a success from the client's perspective — just clear cookies.
+        }
 
-        return response()->json([
+        $response = response()->json([
             'message' => 'Successfully logged out',
         ]);
+
+        return AuthCookies::forget($response);
     }
 
     public function refresh()
     {
         $token = JWTAuth::refresh(JWTAuth::getToken());
 
-        return response()->json([
+        $response = response()->json([
             'token' => $token,
         ]);
+
+        return AuthCookies::attach($response, $token);
+    }
+
+    /**
+     * Issue a fresh CSRF cookie that the frontend can read and echo back
+     * in the X-XSRF-TOKEN header. Called once on app boot before any
+     * mutation; safe to call repeatedly.
+     */
+    public function csrfToken()
+    {
+        $response = response()->json(['success' => true]);
+        $secure = app()->environment('production');
+
+        $response->headers->setCookie(
+            \Illuminate\Support\Facades\Cookie::make(
+                name: AuthCookies::CSRF_COOKIE,
+                value: AuthCookies::generateCsrfToken(),
+                minutes: (int) config('jwt.ttl', 60),
+                path: '/',
+                domain: null,
+                secure: $secure,
+                httpOnly: false,
+                raw: false,
+                sameSite: 'lax',
+            )
+        );
+
+        return $response;
     }
 }
