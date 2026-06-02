@@ -17,9 +17,11 @@ class StoreCashExpenseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount'        => ['required', 'numeric', 'min:1'],
-            'description'   => ['required', 'string', 'max:255'],
-            'cash_shift_id' => ['required', 'integer', 'exists:cash_shifts,id'],
+            'amount'      => ['required', 'numeric', 'min:1'],
+            'description' => ['required', 'string', 'max:255'],
+            // cash_shift_id is intentionally NOT accepted from the client:
+            // the controller resolves it from the currently open shift to
+            // avoid a malicious payload misrouting expenses to an older shift.
         ];
     }
 
@@ -29,13 +31,11 @@ class StoreCashExpenseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'amount.required'        => 'El monto es obligatorio.',
-            'amount.numeric'         => 'El monto debe ser un número.',
-            'amount.min'             => 'El monto mínimo es $1.',
-            'description.required'   => 'La descripción es obligatoria.',
-            'description.max'        => 'La descripción no puede superar los 255 caracteres.',
-            'cash_shift_id.required' => 'El turno de caja es obligatorio.',
-            'cash_shift_id.exists'   => 'El turno de caja seleccionado no existe.',
+            'amount.required'      => 'El monto es obligatorio.',
+            'amount.numeric'       => 'El monto debe ser un número.',
+            'amount.min'           => 'El monto mínimo es $1.',
+            'description.required' => 'La descripción es obligatoria.',
+            'description.max'      => 'La descripción no puede superar los 255 caracteres.',
         ];
     }
 }

@@ -35,27 +35,31 @@ class CashExpenseController extends Controller
     {
         $validated = $request->validated();
 
-        /** @var CashShift $shift */
-        $shift = CashShift::findOrFail($validated['cash_shift_id']);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            // Resolve the open shift server-side and lock it for the duration
+            // of this transaction so concurrent open/close operations don't
+            // race against the expense write.
+            $shift = CashShift::where('status', 'open')->lockForUpdate()->first();
 
-        if ($shift->status !== 'open') {
+            if (! $shift) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede registrar un egreso: no hay un turno de caja abierto.',
+                ], 422);
+            }
+
+            $expense = CashExpense::create([
+                'cash_shift_id' => $shift->id,
+                'user_id'       => auth()->id(),
+                'amount'        => $validated['amount'],
+                'description'   => $validated['description'],
+            ]);
+
             return response()->json([
-                'success' => false,
-                'message' => 'No se puede registrar un egreso: el turno de caja no está abierto.',
-            ], 422);
-        }
-
-        $expense = CashExpense::create([
-            'cash_shift_id' => $validated['cash_shift_id'],
-            'user_id'       => auth()->id(),
-            'amount'        => $validated['amount'],
-            'description'   => $validated['description'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Egreso registrado exitosamente.',
-            'data'    => new CashExpenseResource($expense),
-        ], 201);
+                'success' => true,
+                'message' => 'Egreso registrado exitosamente.',
+                'data'    => new CashExpenseResource($expense),
+            ], 201);
+        });
     }
 }
