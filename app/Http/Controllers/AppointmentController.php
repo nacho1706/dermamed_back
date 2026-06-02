@@ -13,18 +13,25 @@ class AppointmentController extends Controller
 {
     public function index(IndexAppointmentsRequest $request)
     {
+        $this->authorize('viewAny', Appointment::class);
+
+        $user = auth()->user();
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
         $query = Appointment::query()
             ->with(['patient', 'doctor', 'service', 'invoice'])
-            ->when(auth()->user()->hasRole('doctor'), fn ($q) => $q->with('medicalRecord'));
+            ->when($user->hasRole('doctor'), fn ($q) => $q->with('medicalRecord'));
 
         if (isset($validated['patient_id'])) {
             $query->where('patient_id', $validated['patient_id']);
         }
 
-        if (isset($validated['doctor_id'])) {
+        // Doctors only see their own appointments; manager/receptionist see all
+        // and can filter freely via doctor_id.
+        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
+            $query->where('doctor_id', $user->id);
+        } elseif (isset($validated['doctor_id'])) {
             $query->where('doctor_id', $validated['doctor_id']);
         }
 
@@ -51,17 +58,18 @@ class AppointmentController extends Controller
 
     public function store(StoreAppointmentRequest $request)
     {
+        $this->authorize('create', Appointment::class);
+
         $validated = $request->validated();
         $user = auth()->user();
 
-        // Security: Doctors can only schedule for themselves
+        // Doctors can only schedule for themselves; force ownership
         if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
             if (isset($validated['doctor_id']) && (int) $validated['doctor_id'] !== $user->id) {
                 return response()->json([
                     'message' => 'No tienes permiso para agendar turnos para otros médicos.',
                 ], 403);
             }
-            // Ensure they can't bypass by omitting doctor_id (though it's required in request)
             $validated['doctor_id'] = $user->id;
         }
 
@@ -76,8 +84,10 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment)
     {
+        $this->authorize('view', $appointment);
+
         $appointment->load(['patient', 'doctor', 'service']);
-        
+
         if (auth()->user()->hasRole('doctor')) {
             $appointment->load('medicalRecord');
         }
@@ -87,18 +97,13 @@ class AppointmentController extends Controller
 
     public function update(UpdateAppointmentRequest $request, Appointment $appointment)
     {
+        $this->authorize('update', $appointment);
+
         $validated = $request->validated();
         $user = auth()->user();
 
-        // Security: Doctors can only modify their own appointments
+        // Doctors cannot reassign ownership of their appointments to another doctor
         if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
-            if ($appointment->doctor_id !== $user->id) {
-                return response()->json([
-                    'message' => 'No tienes permiso para modificar turnos de otros médicos.',
-                ], 403);
-            }
-
-            // Also prevent reassigning ownership to someone else
             if (isset($validated['doctor_id']) && (int) $validated['doctor_id'] !== $user->id) {
                 return response()->json([
                     'message' => 'No tienes permiso para reasignar este turno a otro médico.',
@@ -159,16 +164,7 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment)
     {
-        $user = auth()->user();
-
-        // Security: Doctors can only delete their own appointments
-        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
-            if ($appointment->doctor_id !== $user->id) {
-                return response()->json([
-                    'message' => 'No tienes permiso para eliminar turnos de otros médicos.',
-                ], 403);
-            }
-        }
+        $this->authorize('delete', $appointment);
 
         $appointment->delete();
 

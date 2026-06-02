@@ -18,6 +18,8 @@ class MedicalRecordAttachmentController extends Controller
      */
     public function store(StoreAttachmentRequest $request, MedicalRecord $medicalRecord)
     {
+        $this->authorize('create', [MedicalRecordAttachment::class, $medicalRecord]);
+
         $uploaded = [];
 
         foreach ($request->file('attachments') as $file) {
@@ -58,11 +60,22 @@ class MedicalRecordAttachmentController extends Controller
      */
     public function show(MedicalRecord $medicalRecord, MedicalRecordAttachment $attachment)
     {
-        // Verificar que el attachment pertenece al medical record (evitar IDOR)
+        // Verificar que el attachment pertenece al medical record (evitar IDOR por nesting)
         abort_if(
             $attachment->medical_record_id !== $medicalRecord->id,
             404,
             'Adjunto no encontrado.'
+        );
+
+        $this->authorize('view', $attachment);
+
+        // Defensa adicional: el path debe vivir dentro de la carpeta privada
+        // de historias clínicas; impide path traversal aunque la columna
+        // ya está controlada por el sistema.
+        abort_if(
+            ! Str::startsWith($attachment->path, 'private/medical_records/'),
+            404,
+            'Archivo no encontrado en el almacenamiento.'
         );
 
         $fullPath = Storage::disk('local')->path($attachment->path);
@@ -89,7 +102,12 @@ class MedicalRecordAttachmentController extends Controller
             'Adjunto no encontrado.'
         );
 
-        Storage::disk('local')->delete($attachment->path);
+        $this->authorize('delete', $attachment);
+
+        // Defensa contra path traversal en delete físico
+        if (Str::startsWith($attachment->path, 'private/medical_records/')) {
+            Storage::disk('local')->delete($attachment->path);
+        }
         $attachment->delete();
 
         return response()->json([

@@ -13,7 +13,9 @@ class InvoiceController extends Controller
 {
     public function __construct(
         private readonly InvoiceService $invoiceService,
-    ) {}
+    ) {
+        $this->authorizeResource(Invoice::class, 'invoice');
+    }
 
     public function index(IndexInvoicesRequest $request)
     {
@@ -94,6 +96,8 @@ class InvoiceController extends Controller
 
     public function history(Invoice $invoice)
     {
+        $this->authorize('view', $invoice);
+
         $history = \App\Models\InvoiceHistory::where('invoice_id', $invoice->id)
             ->with('user')
             ->orderBy('created_at', 'desc')

@@ -13,6 +13,11 @@ use App\Models\Patient;
 
 class PatientController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Patient::class, 'patient');
+    }
+
     public function index(IndexPatientsRequest $request)
     {
         $validated = $request->validated();
@@ -115,12 +120,8 @@ class PatientController extends Controller
 
     }
 
-    public function destroy(\Illuminate\Http\Request $request, Patient $patient)
+    public function destroy(Patient $patient)
     {
-        if (! $request->user()->roles->contains('name', 'clinic_manager')) {
-            abort(403, 'Unauthorized action.');
-        }
-
         $patient->delete();
 
         return response()->json([
@@ -130,6 +131,8 @@ class PatientController extends Controller
 
     public function import(ImportPatientRequest $request, ImportPatientsAction $action)
     {
+        $this->authorize('create', Patient::class);
+
         $result = $action->execute($request->file('file'));
 
         return response()->json([

@@ -15,22 +15,24 @@ class MedicalRecordController extends Controller
 {
     public function index(IndexMedicalRecordsRequest $request)
     {
-        if (! auth()->user()->hasRole('doctor')) {
-            abort(403, 'Access denied: Only doctors can view medical records list.');
-        }
+        $this->authorize('viewAny', MedicalRecord::class);
 
+        $user = auth()->user();
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
 
         $query = MedicalRecord::query()->with(['patient', 'doctor', 'appointment'])->withCount('attachments');
 
-        if (isset($validated['patient_id'])) {
-            $query->where('patient_id', $validated['patient_id']);
+        // Doctors can only see their own records, regardless of the doctor_id filter.
+        if ($user->isDoctor() && ! $user->isClinicManager()) {
+            $query->where('doctor_id', $user->id);
+        } elseif (isset($validated['doctor_id'])) {
+            $query->where('doctor_id', $validated['doctor_id']);
         }
 
-        if (isset($validated['doctor_id'])) {
-            $query->where('doctor_id', $validated['doctor_id']);
+        if (isset($validated['patient_id'])) {
+            $query->where('patient_id', $validated['patient_id']);
         }
 
         $paginador = $query->orderBy('date', 'desc')->paginate($cantidad, ['*'], 'page', $pagina);
@@ -40,6 +42,8 @@ class MedicalRecordController extends Controller
 
     public function store(StoreMedicalRecordRequest $request)
     {
+        $this->authorize('create', MedicalRecord::class);
+
         $validated = $request->validated();
         $supplies = $validated['supplies'] ?? [];
 
@@ -77,6 +81,8 @@ class MedicalRecordController extends Controller
 
     public function show(MedicalRecord $medicalRecord)
     {
+        $this->authorize('view', $medicalRecord);
+
         $medicalRecord->load(['patient', 'doctor', 'appointment', 'attachments']);
 
         return new MedicalRecordResource($medicalRecord);
@@ -84,6 +90,8 @@ class MedicalRecordController extends Controller
 
     public function update(UpdateMedicalRecordRequest $request, MedicalRecord $medicalRecord)
     {
+        $this->authorize('update', $medicalRecord);
+
         $validated = $request->validated();
 
         $medicalRecord = MedicalRecordFactory::fromRequest($validated, $medicalRecord);
@@ -95,6 +103,8 @@ class MedicalRecordController extends Controller
 
     public function destroy(MedicalRecord $medicalRecord)
     {
+        $this->authorize('delete', $medicalRecord);
+
         $medicalRecord->delete();
 
         return response()->json([
