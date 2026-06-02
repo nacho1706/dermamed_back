@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Factories\UserFactory;
 use App\Http\Requests\User\IndexUsersRequest;
 use App\Http\Requests\User\LoginUserRequest;
-use App\Http\Requests\User\RegisterUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -13,23 +12,6 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
-    public function register(RegisterUserRequest $request)
-    {
-        $validated = $request->validated();
-
-        $user = UserFactory::fromRequest($validated);
-        $user->save();
-        $user->roles()->sync($validated['role_ids']);
-        $user->load('roles');
-
-        $token = JWTAuth::fromUser($user);
-
-        return response()->json([
-            'user' => new UserResource($user),
-            'token' => $token,
-        ], 201);
-    }
-
     public function login(LoginUserRequest $request)
     {
         $validated = $request->validated();

@@ -42,7 +42,7 @@ class UserInvitationController extends Controller
 
         $this->sendInvitationEmail($user, $token);
 
-        Log::info("Invitation token for {$user->email}: {$token}");
+        Log::info('Invitation sent', ['user_id' => $user->id]);
 
         return response()->json([
             'message' => 'Invitation sent successfully',
@@ -69,7 +69,7 @@ class UserInvitationController extends Controller
 
         $this->sendInvitationEmail($user, $token);
 
-        Log::info("Resent invitation token for {$user->email}: {$token}");
+        Log::info('Invitation resent', ['user_id' => $user->id]);
 
         return response()->json(['message' => 'Invitation resent successfully']);
     }

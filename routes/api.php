@@ -27,11 +27,12 @@ use App\Http\Controllers\VoucherTypeController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-// Public auth routes
-Route::post('/register', [UserController::class, 'register']);
-Route::post('/login', [UserController::class, 'login']);
-Route::get('/users/verify-token/{token}', [UserInvitationController::class, 'verify']);
-Route::post('/users/activate', [UserInvitationController::class, 'activate']);
+// Public auth routes (rate-limited to prevent brute-force)
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/login', [UserController::class, 'login']);
+    Route::get('/users/verify-token/{token}', [UserInvitationController::class, 'verify']);
+    Route::post('/users/activate', [UserInvitationController::class, 'activate']);
+});
 
 // Protected routes (all require JWT authentication)
 Route::middleware('auth:api')->group(function () {
