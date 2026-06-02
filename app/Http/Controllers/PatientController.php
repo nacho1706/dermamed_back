@@ -10,6 +10,7 @@ use App\Http\Requests\Patient\StorePatientRequest;
 use App\Http\Requests\Patient\UpdatePatientRequest;
 use App\Http\Resources\PatientResource;
 use App\Models\Patient;
+use App\Support\Search;
 
 class PatientController extends Controller
 {
@@ -31,21 +32,21 @@ class PatientController extends Controller
         }
 
         if (isset($validated['first_name'])) {
-            $query->where('first_name', 'like', '%'.$validated['first_name'].'%');
+            $query->where('first_name', 'ilike', '%'.Search::escapeLike($validated['first_name']).'%');
         }
 
         if (isset($validated['last_name'])) {
-            $query->where('last_name', 'like', '%'.$validated['last_name'].'%');
+            $query->where('last_name', 'ilike', '%'.Search::escapeLike($validated['last_name']).'%');
         }
 
         if (isset($validated['cuit'])) {
-            $query->where('cuit', 'like', '%'.$validated['cuit'].'%');
+            $query->where('cuit', 'ilike', '%'.Search::escapeLike($validated['cuit']).'%');
         }
 
         if (isset($validated['search'])) {
-            $search = $validated['search'];
-            $query->where(function ($q) use ($search) {
-                if (ctype_digit(str_replace(' ', '', $search))) {
+            $search = Search::escapeLike($validated['search']);
+            $query->where(function ($q) use ($search, $validated) {
+                if (ctype_digit(str_replace(' ', '', $validated['search']))) {
                     $q->where('dni', 'ilike', '%'.$search.'%')
                         ->orWhere('phone', 'ilike', '%'.$search.'%');
                 } else {
@@ -59,12 +60,12 @@ class PatientController extends Controller
 
         if (isset($validated['insurance_provider'])) {
             $query->whereHas('healthInsurance', function ($q) use ($validated) {
-                $q->where('name', 'ilike', '%'.$validated['insurance_provider'].'%');
+                $q->where('name', 'ilike', '%'.Search::escapeLike($validated['insurance_provider']).'%');
             });
         }
 
         if (isset($validated['province'])) {
-            $query->where('province', 'ilike', '%'.$validated['province'].'%');
+            $query->where('province', 'ilike', '%'.Search::escapeLike($validated['province']).'%');
         }
 
         // Sorting

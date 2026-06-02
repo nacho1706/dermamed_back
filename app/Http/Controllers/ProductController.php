@@ -33,7 +33,7 @@ class ProductController extends Controller
 
         // ── Text search (combined with other filters) ───────────────────
         if (isset($validated['name'])) {
-            $query->where('name', 'ilike', '%'.$validated['name'].'%');
+            $query->where('name', 'ilike', '%'.\App\Support\Search::escapeLike($validated['name']).'%');
         }
 
         // ── Filter by category ──────────────────────────────────────────
@@ -88,7 +88,7 @@ class ProductController extends Controller
 
         // ── Same filters as index ─────────────────────────────────────────
         if (isset($validated['name'])) {
-            $query->where('name', 'ilike', '%'.$validated['name'].'%');
+            $query->where('name', 'ilike', '%'.\App\Support\Search::escapeLike($validated['name']).'%');
         }
         if (isset($validated['category_id'])) {
             $query->where('category_id', $validated['category_id']);

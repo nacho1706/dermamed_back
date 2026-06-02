@@ -30,6 +30,9 @@ use Illuminate\Support\Facades\Route;
 // Public auth routes (rate-limited to prevent brute-force)
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/login', [UserController::class, 'login']);
+    // POST: token en body (preferido — no se filtra al Referer ni a logs de proxy).
+    Route::post('/users/verify-token', [UserInvitationController::class, 'verify']);
+    // GET con token en URL: deprecado, mantenido por compatibilidad temporal.
     Route::get('/users/verify-token/{token}', [UserInvitationController::class, 'verify']);
     Route::post('/users/activate', [UserInvitationController::class, 'activate']);
 });

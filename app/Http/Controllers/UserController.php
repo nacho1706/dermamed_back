@@ -8,6 +8,7 @@ use App\Http\Requests\User\LoginUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\Search;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
@@ -44,11 +45,11 @@ class UserController extends Controller
         $query = User::query()->with('roles');
 
         if (isset($validated['name'])) {
-            $query->where('name', 'like', '%'.$validated['name'].'%');
+            $query->where('name', 'ilike', '%'.Search::escapeLike($validated['name']).'%');
         }
 
         if (isset($validated['email'])) {
-            $query->where('email', 'like', '%'.$validated['email'].'%');
+            $query->where('email', 'ilike', '%'.Search::escapeLike($validated['email']).'%');
         }
 
         if (isset($validated['role_id'])) {

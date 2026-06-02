@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserInvitationController extends Controller
@@ -74,8 +75,19 @@ class UserInvitationController extends Controller
         return response()->json(['message' => 'Invitation resent successfully']);
     }
 
-    public function verify($token)
+    /**
+     * POST /users/verify-token  (token en el body para no exponerlo en URL/Referer/logs)
+     * Mantenemos GET /users/verify-token/{token} para compatibilidad temporal
+     * (deprecado — el frontend debe migrar a POST).
+     */
+    public function verify(Request $request, ?string $token = null)
     {
+        $token = $token ?? $request->input('token');
+
+        if (! $token) {
+            return response()->json(['message' => 'Token is required'], 422);
+        }
+
         $invitation = UserInvitation::where('token', $token)
             ->where('expires_at', '>', now())
             ->first();
@@ -91,7 +103,7 @@ class UserInvitationController extends Controller
     {
         $validated = $request->validate([
             'token' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', Password::min(10)->mixedCase()->numbers()],
         ]);
 
         $invitation = UserInvitation::where('token', $validated['token'])

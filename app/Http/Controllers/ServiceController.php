@@ -23,7 +23,7 @@ class ServiceController extends Controller
         $query = Service::query();
 
         if (isset($validated['name'])) {
-            $query->where('name', 'like', '%'.$validated['name'].'%');
+            $query->where('name', 'ilike', '%'.\App\Support\Search::escapeLike($validated['name']).'%');
         }
 
         $paginador = $query->paginate($cantidad, ['*'], 'page', $pagina);
