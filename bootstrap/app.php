@@ -9,6 +9,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -48,6 +49,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // 401 - Unauthenticated
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+        });
+
+        // 401 - JWT auth middleware tries to redirect to the "login" named
+        // route when the token is missing; this is an API-only app so that
+        // route does not exist. Map the resulting RouteNotFoundException to
+        // 401 instead of letting it surface as 500.
+        $exceptions->render(function (RouteNotFoundException $e, Request $request) {
+            if (($request->is('api/*') || $request->expectsJson()) && str_contains($e->getMessage(), '[login]')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated',
