@@ -8,11 +8,15 @@ use App\Http\Requests\MedicalRecord\StoreMedicalRecordRequest;
 use App\Http\Requests\MedicalRecord\UpdateMedicalRecordRequest;
 use App\Http\Resources\MedicalRecordResource;
 use App\Models\MedicalRecord;
-use App\Models\StockMovement;
+use App\Services\StockMovementService;
 use Illuminate\Support\Facades\DB;
 
 class MedicalRecordController extends Controller
 {
+    public function __construct(
+        private readonly StockMovementService $stockService,
+    ) {}
+
     public function index(IndexMedicalRecordsRequest $request)
     {
         $this->authorize('viewAny', MedicalRecord::class);
@@ -58,15 +62,23 @@ class MedicalRecordController extends Controller
             $record = MedicalRecordFactory::fromRequest($data);
             $record->save();
 
-            // Create stock movements (type = 'out') for each consumed supply
+            // Aggregate by product_id so two lines of the same supply don't
+            // pass the per-line stock check while collectively going negative.
+            $aggregated = [];
             foreach ($supplies as $supply) {
-                StockMovement::create([
-                    'product_id' => $supply['product_id'],
-                    'user_id' => auth()->id(),
-                    'type' => 'out',
-                    'quantity' => $supply['quantity'],
-                    'reason' => "Consumo en consulta médica #{$record->id}",
-                ]);
+                $pid = (int) $supply['product_id'];
+                $aggregated[$pid] = ($aggregated[$pid] ?? 0) + (int) $supply['quantity'];
+            }
+
+            // Discount stock AND record the ledger entry. Previously only the
+            // ledger was inserted, leaving Product.stock untouched: silent
+            // divergence between the inventory column and the movements.
+            foreach ($aggregated as $productId => $quantity) {
+                $this->stockService->recordOut(
+                    productId: $productId,
+                    quantity: $quantity,
+                    reason: "Consumo en consulta médica #{$record->id}",
+                );
             }
 
             return $record;

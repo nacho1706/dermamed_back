@@ -86,11 +86,11 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
-        $invoice->delete();
+        $this->invoiceService->cancelSale($invoice);
 
         return response()->json([
             'success' => true,
-            'message' => 'Invoice deleted successfully',
+            'message' => 'Invoice cancelled and stock returned.',
         ]);
     }
 
