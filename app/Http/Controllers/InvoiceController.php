@@ -13,12 +13,12 @@ class InvoiceController extends Controller
 {
     public function __construct(
         private readonly InvoiceService $invoiceService,
-    ) {
-        $this->authorizeResource(Invoice::class, 'invoice');
-    }
+    ) {}
 
     public function index(IndexInvoicesRequest $request)
     {
+        $this->authorize('viewAny', Invoice::class);
+
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
@@ -54,6 +54,8 @@ class InvoiceController extends Controller
 
     public function store(StoreInvoiceRequest $request)
     {
+        $this->authorize('create', Invoice::class);
+
         $invoice = $this->invoiceService->createSale($request->validated());
 
         return (new InvoiceResource($invoice))
@@ -63,6 +65,8 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
+        $this->authorize('view', $invoice);
+
         $invoice->load([
             'patient',
             'voucherType',
@@ -79,6 +83,8 @@ class InvoiceController extends Controller
 
     public function update(UpdateInvoiceRequest $request, Invoice $invoice)
     {
+        $this->authorize('update', $invoice);
+
         $invoice = $this->invoiceService->updateSale($invoice, $request->validated());
 
         return new InvoiceResource($invoice);
@@ -86,6 +92,8 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
+        $this->authorize('delete', $invoice);
+
         $this->invoiceService->cancelSale($invoice);
 
         return response()->json([

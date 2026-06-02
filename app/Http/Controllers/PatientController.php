@@ -14,13 +14,10 @@ use App\Support\Search;
 
 class PatientController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Patient::class, 'patient');
-    }
-
     public function index(IndexPatientsRequest $request)
     {
+        $this->authorize('viewAny', Patient::class);
+
         $validated = $request->validated();
         $cantidad = $validated['cantidad'] ?? 10;
         $pagina = $validated['pagina'] ?? 1;
@@ -85,6 +82,8 @@ class PatientController extends Controller
 
     public function store(StorePatientRequest $request)
     {
+        $this->authorize('create', Patient::class);
+
         $validated = $request->validated();
 
         $patient = PatientFactory::fromRequest($validated);
@@ -94,11 +93,12 @@ class PatientController extends Controller
         return (new PatientResource($patient))
             ->response()
             ->setStatusCode(201);
-
     }
 
     public function show(\Illuminate\Http\Request $request, Patient $patient)
     {
+        $this->authorize('view', $patient);
+
         $patient->load('healthInsurance');
 
         if ($request->user()->hasRole('doctor')) {
@@ -111,9 +111,10 @@ class PatientController extends Controller
         return new PatientResource($patient);
     }
 
-
     public function update(UpdatePatientRequest $request, Patient $patient)
     {
+        $this->authorize('update', $patient);
+
         $validated = $request->validated();
 
         $patient = PatientFactory::fromRequest($validated, $patient);
@@ -121,11 +122,12 @@ class PatientController extends Controller
         $patient->load('healthInsurance');
 
         return new PatientResource($patient);
-
     }
 
     public function destroy(Patient $patient)
     {
+        $this->authorize('delete', $patient);
+
         $patient->delete();
 
         return response()->json([
