@@ -36,23 +36,9 @@ class ProductController extends Controller
             $query->where('name', 'ilike', '%'.\App\Support\Search::escapeLike($validated['name']).'%');
         }
 
-        // ── Filter by category ──────────────────────────────────────────
-        if (isset($validated['category_id'])) {
-            $query->where('category_id', $validated['category_id']);
-        }
-
         // ── Filter by brand ─────────────────────────────────────────────
         if (isset($validated['brand_id'])) {
             $query->where('brand_id', $validated['brand_id']);
-        }
-
-        // ── Filter by product type ──────────────────────────────────────
-        if (isset($validated['is_for_sale'])) {
-            $query->where('is_for_sale', filter_var($validated['is_for_sale'], FILTER_VALIDATE_BOOLEAN));
-        }
-
-        if (isset($validated['is_supply'])) {
-            $query->where('is_supply', filter_var($validated['is_supply'], FILTER_VALIDATE_BOOLEAN));
         }
 
         // ── Sorting ─────────────────────────────────────────────────────
@@ -90,17 +76,8 @@ class ProductController extends Controller
         if (isset($validated['name'])) {
             $query->where('name', 'ilike', '%'.\App\Support\Search::escapeLike($validated['name']).'%');
         }
-        if (isset($validated['category_id'])) {
-            $query->where('category_id', $validated['category_id']);
-        }
         if (isset($validated['brand_id'])) {
             $query->where('brand_id', $validated['brand_id']);
-        }
-        if (isset($validated['is_for_sale'])) {
-            $query->where('is_for_sale', filter_var($validated['is_for_sale'], FILTER_VALIDATE_BOOLEAN));
-        }
-        if (isset($validated['is_supply'])) {
-            $query->where('is_supply', filter_var($validated['is_supply'], FILTER_VALIDATE_BOOLEAN));
         }
 
         return response()->json([

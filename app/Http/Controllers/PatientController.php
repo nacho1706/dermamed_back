@@ -102,7 +102,10 @@ class PatientController extends Controller
         $patient->load('healthInsurance');
 
         if ($request->user()->hasRole('doctor')) {
-            $patient->load('medicalRecords');
+            // Limit to the 20 most recent records to avoid massive payloads
+            // for chronic patients. A paginated endpoint should be used to
+            // browse the full history.
+            $patient->load(['medicalRecords' => fn ($q) => $q->latest('date')->limit(20)]);
         }
 
         return new PatientResource($patient);

@@ -41,6 +41,8 @@ Route::middleware('throttle:5,1')->group(function () {
 Route::middleware('auth:api')->group(function () {
     // Auth (all authenticated users)
     Route::get('/me', [UserController::class, 'me']);
+    Route::put('/me', [UserController::class, 'updateMe']);
+    Route::put('/me/password', [UserController::class, 'changeMyPassword']);
     Route::get('/roles', [RoleController::class, 'index']);
     Route::post('/logout', [UserController::class, 'logout']);
     Route::post('/refresh', [UserController::class, 'refresh']);
@@ -60,12 +62,6 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
     });
 
-
-    // ── Doctors (Convenience Endpoint) ──────────────────────────────────
-    // Aliases to UserController@index with role=doctor filter pre-applied.
-    Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
-        Route::get('/doctors', [UserController::class, 'index'])->defaults('role', 'doctor');
-    });
 
     // ── Patients ────────────────────────────────────────────────────────
     // View: Clinic Manager, Doctor, Receptionist.

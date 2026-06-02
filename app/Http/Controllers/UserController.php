@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Factories\UserFactory;
+use App\Http\Requests\User\ChangeMyPasswordRequest;
 use App\Http\Requests\User\IndexUsersRequest;
 use App\Http\Requests\User\LoginUserRequest;
+use App\Http\Requests\User\UpdateMeRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\Search;
+use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
@@ -111,6 +114,27 @@ class UserController extends Controller
         $user->load('roles');
 
         return new UserResource($user);
+    }
+
+    public function updateMe(UpdateMeRequest $request)
+    {
+        $user = auth()->user();
+        $user->fill($request->validated());
+        $user->save();
+        $user->load('roles');
+
+        return new UserResource($user);
+    }
+
+    public function changeMyPassword(ChangeMyPasswordRequest $request)
+    {
+        $user = auth()->user();
+        $user->password = Hash::make($request->validated()['password']);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password updated successfully',
+        ]);
     }
 
     public function logout()
