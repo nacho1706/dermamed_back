@@ -36,7 +36,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        $schedule->command('appointments:send-reminders')->hourly();
+        // Reminders go out once a day in the evening (was hourly — that was
+        // re-processing every patient 24x per day for no reason).
+        $schedule->command('appointments:send-reminders')->dailyAt('18:00');
+
+        // Marks no-show appointments where the patient never checked in.
+        // Runs every 15 minutes so the dashboard reflects reality without
+        // hammering the DB.
+        $schedule->command('app:mark-no-show-appointments')->everyFifteenMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // 404 - Model not found
