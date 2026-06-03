@@ -1,37 +1,47 @@
-FROM php:8.4-apache
+# syntax=docker/dockerfile:1.7
 
-# 1. Sistema y Librerías
-RUN apt-get update && apt-get install -y \
-    zip unzip git curl \
-    libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    libicu-dev libpq-dev libonig-dev \
+# ─── Stage 1: vendor ──────────────────────────────────────────────────────────
+# Resolve Composer dependencies with --no-dev for production. Keeping this
+# step in a dedicated stage means the final image never ships Composer itself,
+# build caches, or dev packages (phpunit, pail, etc).
+FROM composer:2 AS vendor
+WORKDIR /build
+COPY composer.json composer.lock ./
+RUN composer install \
+        --no-dev \
+        --no-scripts \
+        --no-autoloader \
+        --prefer-dist \
+        --no-progress
+
+# ─── Stage 2: runtime ─────────────────────────────────────────────────────────
+FROM php:8.4-apache AS runtime
+
+# System + PHP extensions. Kept minimal: only what Laravel + Postgres needs.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        zip unzip git curl \
+        libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
+        libicu-dev libpq-dev libonig-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install gd zip intl pdo pdo_pgsql bcmath opcache \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# 3. Apache Config
-RUN a2enmod rewrite
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' \
-    /etc/apache2/sites-available/000-default.conf
+# Apache: serve from public/
+RUN a2enmod rewrite \
+    && sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' \
+        /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
 
-# 4. Dependencias (Cache Layer)
-COPY composer.json composer.lock ./
-# En el build de la imagen instalamos todo. 
-# En prod se puede usar --no-dev, pero para simplificar mantenemos esto por ahora.
-RUN composer install --no-scripts --no-autoloader
-
-# 5. Código Fuente
+# Bring in the prebuilt vendor/ from stage 1, then the application code.
+COPY --from=vendor /build/vendor ./vendor
 COPY . .
 
-# 6. Finalización
-RUN composer dump-autoload --optimize
-RUN chown -R www-data:www-data storage bootstrap/cache
-RUN chmod -R 775 storage bootstrap/cache
+# Composer (binary copied from upstream image) so the post-install scripts
+# can regenerate the optimized autoloader against the actual source tree.
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN composer dump-autoload --optimize --classmap-authoritative --no-dev \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# CMD por defecto de Apache
 CMD ["apache2-foreground"]
