@@ -32,6 +32,10 @@ use Illuminate\Support\Facades\Route;
 // unauthenticated.
 Route::get('/csrf-token', [UserController::class, 'csrfToken']);
 
+// Extended healthcheck (DB + storage). Use this from load balancers /
+// monitoring; the bare /up only confirms PHP is alive.
+Route::get('/health', \App\Http\Controllers\HealthcheckController::class);
+
 // Public auth routes (rate-limited to prevent brute-force)
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/login', [UserController::class, 'login']);
@@ -148,6 +152,7 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('role:clinic_manager,receptionist,doctor')->group(function () {
         Route::get('/doctor-availabilities', [DoctorAvailabilityController::class, 'index']);
         Route::get('/doctor-availabilities/{doctor_availability}', [DoctorAvailabilityController::class, 'show']);
+        Route::get('/doctors/{doctor}/available-slots', [DoctorAvailabilityController::class, 'availableSlots']);
     });
     Route::middleware('role:receptionist,doctor,clinic_manager')->group(function () {
         Route::put('/doctor-availabilities/sync', [DoctorAvailabilityController::class, 'sync']);

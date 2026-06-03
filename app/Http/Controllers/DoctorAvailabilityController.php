@@ -9,6 +9,8 @@ use App\Http\Requests\DoctorAvailability\SyncDoctorAvailabilitiesRequest;
 use App\Http\Requests\DoctorAvailability\UpdateDoctorAvailabilityRequest;
 use App\Http\Resources\DoctorAvailabilityResource;
 use App\Models\DoctorAvailability;
+use App\Services\AvailableSlotsService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DoctorAvailabilityController extends Controller
@@ -100,6 +102,34 @@ class DoctorAvailabilityController extends Controller
 
         return response()->json([
             'message' => 'Doctor availability deleted successfully',
+        ]);
+    }
+
+    /**
+     * GET /doctors/{doctor}/available-slots?date=YYYY-MM-DD&slot_minutes=30
+     *
+     * Returns the list of bookable time windows for the doctor on the given
+     * date. Previously the frontend was rebuilding this client-side from
+     * availability + appointments — vulnerable to timezone drift and to
+     * race conditions with concurrent bookings.
+     */
+    public function availableSlots(Request $request, int $doctor, AvailableSlotsService $slots)
+    {
+        $request->validate([
+            'date' => 'required|date_format:Y-m-d',
+            'slot_minutes' => 'sometimes|integer|min:5|max:240',
+        ]);
+
+        $list = $slots->forDoctor(
+            doctorId: $doctor,
+            date: $request->string('date')->toString(),
+            slotMinutes: (int) $request->input('slot_minutes', 30),
+        );
+
+        return response()->json([
+            'doctor_id' => $doctor,
+            'date' => $request->string('date')->toString(),
+            'slots' => $list,
         ]);
     }
 }

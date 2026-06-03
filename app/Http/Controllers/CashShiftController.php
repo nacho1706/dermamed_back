@@ -6,6 +6,7 @@ use App\Http\Requests\CashShift\CloseCashShiftRequest;
 use App\Http\Requests\CashShift\OpenCashShiftRequest;
 use App\Http\Resources\CashShiftResource;
 use App\Services\CashShiftService;
+use Illuminate\Http\Request;
 
 class CashShiftController extends Controller
 {
@@ -14,15 +15,21 @@ class CashShiftController extends Controller
     ) {}
 
     /**
-     * Get paginated history of cash shifts.
+     * Get paginated history of cash shifts. Loads payments only on detail (show)
+     * to keep the index response light — before this fix the index eagerly
+     * loaded every payment and expense for every shift ever and returned the
+     * full unpaginated list.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $shifts = \App\Models\CashShift::with(['openedBy', 'closedBy', 'payments.invoice', 'payments.paymentMethod', 'expenses'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $perPage = max(1, min(100, (int) ($request->input('per_page', 10))));
+        $page = max(1, (int) ($request->input('page', 1)));
 
-        return CashShiftResource::collection($shifts);
+        $paginator = \App\Models\CashShift::with(['openedBy', 'closedBy'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return CashShiftResource::collection($paginator);
     }
 
     /**

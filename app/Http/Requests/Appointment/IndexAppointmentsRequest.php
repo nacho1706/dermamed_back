@@ -19,7 +19,7 @@ class IndexAppointmentsRequest extends FormRequest
             'patient_id' => 'sometimes|integer|exists:patients,id',
             'doctor_id' => 'sometimes|integer|exists:users,id',
             'service_id' => 'sometimes|integer|exists:services,id',
-            'status' => 'sometimes|required|string|in:scheduled,in_waiting_room,in_progress,completed,cancelled,no_show',
+            'status' => ['sometimes', 'required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\AppointmentStatus::values())],
             'date_from' => 'sometimes|date',
             'date_to' => 'sometimes|date|after_or_equal:date_from',
         ];

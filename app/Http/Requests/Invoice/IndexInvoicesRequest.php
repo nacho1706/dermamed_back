@@ -17,7 +17,7 @@ class IndexInvoicesRequest extends FormRequest
             'cantidad' => 'sometimes|integer|min:1',
             'pagina' => 'sometimes|integer|min:1',
             'patient_id' => 'sometimes|integer|exists:patients,id',
-            'status' => 'sometimes|string|in:pending,paid,cancelled',
+            'status' => ['sometimes', 'string', \Illuminate\Validation\Rule::in(\App\Enums\InvoiceStatus::values())],
             'cash_shift_id' => 'sometimes|integer|exists:cash_shifts,id',
             'date_from' => 'sometimes|date',
             'date_to' => 'sometimes|date|after_or_equal:date_from',

@@ -70,7 +70,7 @@ class UpdateAppointmentRequest extends FormRequest
                 },
             ],
             'scheduled_end_at' => 'sometimes|required|date|after:scheduled_start_at',
-            'status' => 'sometimes|required|string|in:scheduled,in_waiting_room,in_progress,completed,cancelled,no_show',
+            'status' => ['sometimes', 'required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\AppointmentStatus::values())],
             'reserve_channel' => 'sometimes|nullable|string|max:50|in:whatsapp,manual,web',
             'notes' => 'sometimes|nullable|string',
         ];

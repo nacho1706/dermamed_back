@@ -19,7 +19,7 @@ class UpdateInvoiceRequest extends FormRequest
             'appointment_id' => 'sometimes|nullable|integer|exists:appointments,id',
             'date' => 'sometimes|date',
             'total_amount' => 'sometimes|required|numeric|min:0',
-            'status' => 'sometimes|required|string|in:pending,paid,cancelled',
+            'status' => ['sometimes', 'required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\InvoiceStatus::values())],
             'cae' => 'sometimes|nullable|string|max:100',
 
             'items' => 'sometimes|array|min:1',

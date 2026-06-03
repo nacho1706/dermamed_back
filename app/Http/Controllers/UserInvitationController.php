@@ -54,7 +54,8 @@ class UserInvitationController extends Controller
     public function resend(User $user)
     {
         if ($user->status !== 'pending_activation') {
-            return response()->json(['message' => 'User is already active'], 400);
+            // 409 Conflict: la cuenta ya está activa, no es un bad request del cliente.
+            return response()->json(['message' => 'User is already active'], 409);
         }
 
         // Invalidate old invitations
