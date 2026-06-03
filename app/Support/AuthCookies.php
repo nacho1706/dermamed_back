@@ -32,7 +32,11 @@ class AuthCookies
         $secure = app()->environment('production');
 
         $response->headers->setCookie(self::makeAuthCookie($token, $ttl, $secure));
-        $response->headers->setCookie(self::makeCsrfCookie(self::generateCsrfToken(), $ttl, $secure));
+        // CSRF cookie lives 24h — it is just a double-submit nonce, not a
+        // secret, and outlasting the JWT TTL prevents the "419 right after
+        // the token refresh" race when axios reuses the request that was
+        // queued during the refresh.
+        $response->headers->setCookie(self::makeCsrfCookie(self::generateCsrfToken(), 60 * 24, $secure));
 
         return $response;
     }

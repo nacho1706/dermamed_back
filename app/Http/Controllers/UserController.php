@@ -175,17 +175,22 @@ class UserController extends Controller
      * Issue a fresh CSRF cookie that the frontend can read and echo back
      * in the X-XSRF-TOKEN header. Called once on app boot before any
      * mutation; safe to call repeatedly.
+     *
+     * Also returns the token in the response body so the frontend can
+     * stash it directly in axios defaults — this bypasses any cross-origin
+     * cookie weirdness (frontend on :3000 reading cookies set by :8080).
      */
     public function csrfToken()
     {
-        $response = response()->json(['success' => true]);
+        $token = AuthCookies::generateCsrfToken();
+        $response = response()->json(['token' => $token]);
         $secure = app()->environment('production');
 
         $response->headers->setCookie(
             \Illuminate\Support\Facades\Cookie::make(
                 name: AuthCookies::CSRF_COOKIE,
-                value: AuthCookies::generateCsrfToken(),
-                minutes: (int) config('jwt.ttl', 60),
+                value: $token,
+                minutes: 60 * 24,
                 path: '/',
                 domain: null,
                 secure: $secure,
