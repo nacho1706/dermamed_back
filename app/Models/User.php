@@ -128,6 +128,17 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * "Pure doctor" = has the doctor role AND nothing else (no manager, no
+     * receptionist powers). Used to apply restrictive scopes (own-records
+     * only, own-appointments only) that ought NOT apply to a manager who
+     * happens to also see patients.
+     */
+    public function isPureDoctor(): bool
+    {
+        return $this->isDoctor() && ! $this->isClinicManager() && ! $this->isReceptionist();
+    }
+
+    /**
      * Check if the user has a specific role by name.
      */
     public function hasRole(string $role): bool

@@ -29,7 +29,7 @@ class MedicalRecordController extends Controller
         $query = MedicalRecord::query()->with(['patient', 'doctor', 'appointment'])->withCount('attachments');
 
         // Doctors can only see their own records, regardless of the doctor_id filter.
-        if ($user->isDoctor() && ! $user->isClinicManager()) {
+        if ($user->isPureDoctor()) {
             $query->where('doctor_id', $user->id);
         } elseif (isset($validated['doctor_id'])) {
             $query->where('doctor_id', $validated['doctor_id']);

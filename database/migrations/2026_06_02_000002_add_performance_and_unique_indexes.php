@@ -15,12 +15,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // ── Partial unique indexes (Postgres) ────────────────────────────
-        // Only ONE open cash shift can exist at a time.
-        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS unique_open_cash_shift ON cash_shifts (status) WHERE status = \'open\'');
+        // ── Partial unique indexes ───────────────────────────────────────
+        // Both Postgres and SQLite (3.8+) support partial indexes with the
+        // same syntax. MySQL does not — guard with the driver name so the
+        // migration is safe across environments. Tests use SQLite in memory,
+        // production uses Postgres.
+        $driver = DB::connection()->getDriverName();
+        if (in_array($driver, ['pgsql', 'sqlite'], true)) {
+            // Only ONE open cash shift can exist at a time.
+            DB::statement("CREATE UNIQUE INDEX IF NOT EXISTS unique_open_cash_shift ON cash_shifts (status) WHERE status = 'open'");
 
-        // An appointment can have AT MOST one invoice.
-        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS unique_invoice_appointment ON invoices (appointment_id) WHERE appointment_id IS NOT NULL AND deleted_at IS NULL');
+            // An appointment can have AT MOST one invoice.
+            DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS unique_invoice_appointment ON invoices (appointment_id) WHERE appointment_id IS NOT NULL AND deleted_at IS NULL');
+        }
 
         // ── Performance indexes ─────────────────────────────────────────
         Schema::table('appointments', function (Blueprint $table) {
@@ -79,7 +86,10 @@ return new class extends Migration
             $table->dropIndex('idx_appointments_status');
         });
 
-        DB::statement('DROP INDEX IF EXISTS unique_invoice_appointment');
-        DB::statement('DROP INDEX IF EXISTS unique_open_cash_shift');
+        $driver = DB::connection()->getDriverName();
+        if (in_array($driver, ['pgsql', 'sqlite'], true)) {
+            DB::statement('DROP INDEX IF EXISTS unique_invoice_appointment');
+            DB::statement('DROP INDEX IF EXISTS unique_open_cash_shift');
+        }
     }
 };

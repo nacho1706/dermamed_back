@@ -40,6 +40,10 @@ class Appointment extends Model
             'check_in_at' => 'datetime',
             'real_start_at' => 'datetime',
             'real_end_at' => 'datetime',
+            // 'status' is intentionally NOT cast to AppointmentStatus enum
+            // yet: 8 call sites still compare $appointment->status with
+            // string literals. Once those are migrated to enum comparisons,
+            // turn this cast on.
         ];
     }
 

@@ -88,8 +88,10 @@ class CashShiftService
             // Persist the snapshot of system_balance and the conciliation
             // difference at close time so historical reports don't drift if
             // payments/expenses change shape later.
+            // Use a portable case-insensitive comparison so the test suite
+            // (SQLite, no ILIKE) and production (Postgres) both work.
             $totalCashIn = (float) $shift->payments()
-                ->whereHas('paymentMethod', fn ($q) => $q->where('name', 'ilike', '%efectivo%'))
+                ->whereHas('paymentMethod', fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%efectivo%']))
                 ->sum('amount');
             $totalExpenses = (float) $shift->expenses()->sum('amount');
             $systemBalance = (float) $shift->initial_balance + $totalCashIn - $totalExpenses;

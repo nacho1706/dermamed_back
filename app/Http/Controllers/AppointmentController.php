@@ -29,7 +29,7 @@ class AppointmentController extends Controller
 
         // Doctors only see their own appointments; manager/receptionist see all
         // and can filter freely via doctor_id.
-        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
+        if ($user->isPureDoctor()) {
             $query->where('doctor_id', $user->id);
         } elseif (isset($validated['doctor_id'])) {
             $query->where('doctor_id', $validated['doctor_id']);
@@ -64,7 +64,7 @@ class AppointmentController extends Controller
         $user = auth()->user();
 
         // Doctors can only schedule for themselves; force ownership
-        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
+        if ($user->isPureDoctor()) {
             if (isset($validated['doctor_id']) && (int) $validated['doctor_id'] !== $user->id) {
                 return response()->json([
                     'message' => 'No tienes permiso para agendar turnos para otros médicos.',
@@ -103,7 +103,7 @@ class AppointmentController extends Controller
         $user = auth()->user();
 
         // Doctors cannot reassign ownership of their appointments to another doctor
-        if ($user->isDoctor() && ! $user->isClinicManager() && ! $user->isReceptionist()) {
+        if ($user->isPureDoctor()) {
             if (isset($validated['doctor_id']) && (int) $validated['doctor_id'] !== $user->id) {
                 return response()->json([
                     'message' => 'No tienes permiso para reasignar este turno a otro médico.',
